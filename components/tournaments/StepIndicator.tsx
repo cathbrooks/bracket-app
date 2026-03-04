@@ -2,29 +2,28 @@
 
 import { cn } from '@/lib/utils';
 import { Check } from 'lucide-react';
+import type { ParticipantType } from '@/lib/constants';
 
-const STEPS = [
-  { label: 'Basic Info' },
-  { label: 'Format' },
-  { label: 'Teams' },
-  { label: 'Timing' },
-  { label: 'Review' },
-];
+const STEP_LABELS = ['Basic Info', 'Format', '', 'Timing', 'Review'] as const;
 
 interface StepIndicatorProps {
   currentStep: number;
+  participantType?: ParticipantType;
 }
 
-export function StepIndicator({ currentStep }: StepIndicatorProps) {
+export function StepIndicator({ currentStep, participantType = 'teams' }: StepIndicatorProps) {
+  const step2Label = participantType === 'players' ? 'Players' : 'Teams';
+  const steps = STEP_LABELS.map((l, i) => (i === 2 ? step2Label : l));
+
   return (
     <nav aria-label="Tournament setup progress" className="mb-8">
       <ol className="flex items-center gap-2">
-        {STEPS.map((step, index) => {
+        {steps.map((label, index) => {
           const isCompleted = index < currentStep;
           const isCurrent = index === currentStep;
 
           return (
-            <li key={step.label} className="flex flex-1 items-center">
+            <li key={index} className="flex flex-1 items-center">
               <div className="flex w-full flex-col items-center gap-1.5">
                 <div className="flex w-full items-center">
                   {index > 0 && (
@@ -49,7 +48,7 @@ export function StepIndicator({ currentStep }: StepIndicatorProps) {
                       index + 1
                     )}
                   </div>
-                  {index < STEPS.length - 1 && (
+                  {index < steps.length - 1 && (
                     <div
                       className={cn(
                         'h-0.5 flex-1 transition-colors',
@@ -64,7 +63,7 @@ export function StepIndicator({ currentStep }: StepIndicatorProps) {
                     isCurrent ? 'text-primary' : 'text-muted-foreground'
                   )}
                 >
-                  {step.label}
+                  {label}
                 </span>
               </div>
             </li>

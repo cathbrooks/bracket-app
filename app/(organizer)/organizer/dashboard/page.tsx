@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase/server';
 import { requireAuth } from '@/lib/auth/server';
 import { toTournament } from '@/lib/types/tournament.types';
 import { ROUTES } from '@/lib/constants';
+import { getParticipantLabels } from '@/lib/utils/terminology';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -84,7 +85,7 @@ export default async function DashboardPage() {
                 <CardContent className="space-y-1 text-sm text-muted-foreground">
                   <p>{t.gameType}</p>
                   <p>
-                    {t.teamCount} teams &middot;{' '}
+                    {t.teamCount} {getParticipantLabels(t.participantType ?? 'teams').plural.toLowerCase()} &middot;{' '}
                     {t.format === 'double-elimination' ? 'Double Elim' : 'Single Elim'}
                   </p>
                   {t.estimatedDurationMinutes && (

@@ -50,11 +50,14 @@ export function SeedingWorkflow({ tournamentId, onComplete }: SeedingWorkflowPro
     );
   }
 
+  const participantType = tournament.participantType ?? 'teams';
+
   if (tournament.seedingMode === 'time-trial') {
     return (
       <TimeTrialInterface
         tournamentId={tournamentId}
         teams={teams}
+        participantType={participantType}
         stationCount={tournament.stationCount ?? 1}
         onComplete={onComplete}
       />
@@ -65,6 +68,7 @@ export function SeedingWorkflow({ tournamentId, onComplete }: SeedingWorkflowPro
     <ManualSeedingInterface
       tournamentId={tournamentId}
       teams={teams}
+      participantType={participantType}
       onComplete={onComplete}
     />
   );

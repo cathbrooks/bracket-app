@@ -41,6 +41,7 @@ export const POST = withErrorHandler(async (
     .from('matches')
     .select('id')
     .eq('tournament_id', id)
+    .eq('is_bye', false)
     .eq('state', 'completed')
     .limit(1);
 

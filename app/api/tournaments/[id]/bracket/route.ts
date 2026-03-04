@@ -34,3 +34,25 @@ export const POST = withErrorHandler(async (
 
   return NextResponse.json({ data: { matches }, error: null }, { status: 201 });
 });
+
+export const DELETE = withErrorHandler(async (
+  _request: NextRequest,
+  context: RouteContext
+) => {
+  const { id } = await context.params;
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+
+  if (!user) throw new UnauthorizedError();
+
+  await validateTournamentOwnership(user.id, id);
+
+  const { error } = await supabase
+    .from('matches')
+    .delete()
+    .eq('tournament_id', id);
+
+  if (error) throw new Error(error.message);
+
+  return NextResponse.json({ data: { deleted: true }, error: null });
+});

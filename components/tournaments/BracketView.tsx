@@ -4,8 +4,15 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import type { Tournament, Team, Match } from '@/lib/types/tournament.types';
-import { createClient } from '@/lib/supabase/client';
 
 interface BracketViewProps {
   tournament: Tournament;
@@ -18,12 +25,14 @@ function MatchCard({
   match,
   teams,
   isOrganizer,
+  canRecordWinners,
   onSelectWinner,
   loading,
 }: {
   match: Match;
   teams: Team[];
   isOrganizer?: boolean;
+  canRecordWinners?: boolean;
   onSelectWinner?: (matchId: string, winnerId: string) => void;
   loading?: boolean;
 }) {
@@ -41,6 +50,7 @@ function MatchCard({
 
   const canReport =
     isOrganizer &&
+    canRecordWinners &&
     match.state !== 'completed' &&
     teamA &&
     teamB &&
@@ -101,33 +111,54 @@ function MatchCard({
 }
 
 export function BracketView({ tournament, teams, matches, isOrganizer }: BracketViewProps) {
+  const canRecordWinners = tournament.state === 'in-progress';
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [showResetDialog, setShowResetDialog] = useState(false);
+  const [resetting, setResetting] = useState(false);
 
   const categories = [...new Set(matches.map((m) => m.bracketCategory ?? 'winners'))];
+
+  async function handleReset() {
+    setResetting(true);
+    setError(null);
+    try {
+      const res = await fetch(`/api/tournaments/${tournament.id}/bracket`, {
+        method: 'DELETE',
+      });
+      if (!res.ok) {
+        const json = await res.json();
+        throw new Error(json.error ?? 'Failed to reset bracket');
+      }
+      setShowResetDialog(false);
+      router.refresh();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to reset bracket');
+    } finally {
+      setResetting(false);
+    }
+  }
 
   async function handleSelectWinner(matchId: string, winnerId: string) {
     setLoading(true);
     setError(null);
 
     try {
-      const match = matches.find((m) => m.id === matchId);
-      if (match && match.state === 'pending') {
-        const supabase = createClient();
-        await supabase
-          .from('matches')
-          .update({ state: 'in-progress', started_at: new Date().toISOString() } as never)
-          .eq('id', matchId);
+      const res = await fetch(
+        `/api/tournaments/${tournament.id}/matches/${matchId}/winner`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ winnerId }),
+        }
+      );
+
+      if (!res.ok) {
+        const json = await res.json();
+        throw new Error(json.error ?? 'Failed to record result');
       }
 
-      const supabase = createClient();
-      const { error: rpcError } = await supabase.rpc('advance_match_winner', {
-        p_match_id: matchId,
-        p_winner_team_id: winnerId,
-      });
-
-      if (rpcError) throw new Error(rpcError.message);
       router.refresh();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to record result');
@@ -138,11 +169,53 @@ export function BracketView({ tournament, teams, matches, isOrganizer }: Bracket
 
   return (
     <div className="space-y-6">
+      {isOrganizer && (
+        <div className="flex justify-end">
+          <Button
+            variant="destructive"
+            size="sm"
+            onClick={() => setShowResetDialog(true)}
+            disabled={loading || resetting}
+          >
+            Reset Bracket
+          </Button>
+        </div>
+      )}
+
       {error && (
         <div className="rounded-md bg-destructive/10 p-3 text-sm text-destructive">
           {error}
         </div>
       )}
+
+      <Dialog open={showResetDialog} onOpenChange={setShowResetDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Reset Bracket?</DialogTitle>
+            <DialogDescription>
+              This will permanently delete all matches and results for this tournament.
+              The bracket will be regenerated from the current seeding. This cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setShowResetDialog(false)}
+              disabled={resetting}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={handleReset}
+              disabled={resetting}
+              loading={resetting}
+            >
+              Yes, Reset Bracket
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {categories.map((category) => {
         const categoryMatches = matches.filter(
@@ -173,6 +246,7 @@ export function BracketView({ tournament, teams, matches, isOrganizer }: Bracket
                         match={m}
                         teams={teams}
                         isOrganizer={isOrganizer}
+                        canRecordWinners={canRecordWinners}
                         onSelectWinner={handleSelectWinner}
                         loading={loading}
                       />

@@ -138,7 +138,7 @@ export function TimingConfigurationStep({ values, onChange, onValidChange }: Tim
         <div className="flex items-start gap-3 rounded-lg border border-yellow-200 bg-yellow-50 p-4 dark:border-yellow-900 dark:bg-yellow-950">
           <Info className="mt-0.5 h-4 w-4 shrink-0 text-yellow-600 dark:text-yellow-400" />
           <p className="text-sm text-yellow-700 dark:text-yellow-300">
-            Maximum useful stations for {values.teamCount} teams is {maxUsefulStations} (half the team count for the first round). Extra stations won&apos;t reduce tournament duration.
+            Maximum useful stations for {values.teamCount} participants is {maxUsefulStations} (half the count for the first round). Extra stations won&apos;t reduce tournament duration.
           </p>
         </div>
       )}

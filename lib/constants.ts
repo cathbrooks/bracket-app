@@ -20,6 +20,9 @@ export const TOURNAMENT_STATES = [
 
 export const SEEDING_MODES = ["manual", "time-trial"] as const;
 
+export const PARTICIPANT_TYPES = ["teams", "players"] as const;
+export type ParticipantType = (typeof PARTICIPANT_TYPES)[number];
+
 export const BRACKET_CATEGORIES = [
   "winners",
   "losers",

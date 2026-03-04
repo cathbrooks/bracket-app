@@ -8,6 +8,7 @@ import { z } from 'zod';
 
 const createTournamentBodySchema = tournamentConfigSchema.extend({
   teamNames: z.array(z.string()).optional(),
+  teamRosters: z.array(z.array(z.string())).optional(),
 });
 
 export const POST = withErrorHandler(async (request: NextRequest) => {
@@ -33,12 +34,14 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
   const result = await createTournament(user.id, {
     name: parsed.data.name,
     gameType: parsed.data.gameType,
+    participantType: parsed.data.participantType,
     format: parsed.data.format,
     teamCount: parsed.data.teamCount,
     stationCount: parsed.data.stationCount,
     timePerMatchMinutes: parsed.data.timePerMatchMinutes,
     seedingMode: parsed.data.seedingMode,
     teamNames: parsed.data.teamNames,
+    teamRosters: parsed.data.teamRosters,
   });
 
   return NextResponse.json(

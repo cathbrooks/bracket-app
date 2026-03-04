@@ -4,6 +4,7 @@ import { createClient } from '@/lib/supabase/server';
 import { requireAuth } from '@/lib/auth/server';
 import { toTournament, toTeam, toMatch } from '@/lib/types/tournament.types';
 import { ROUTES } from '@/lib/constants';
+import { getParticipantLabels } from '@/lib/utils/terminology';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import type { Tables } from '@/lib/database.types';
@@ -56,6 +57,8 @@ export default async function BracketPage({
 
   let matches = ((matchRows ?? []) as unknown as Tables<'matches'>[]).map(toMatch);
 
+  const labels = getParticipantLabels(t.participantType ?? 'teams');
+
   // Auto-generate bracket if no matches exist and we have enough teams
   if (matches.length === 0 && teams.length >= 2) {
     try {
@@ -80,9 +83,9 @@ export default async function BracketPage({
       {matches.length === 0 ? (
         <Card>
           <CardContent className="flex flex-col items-center justify-center py-16 text-center">
-            <p className="text-lg font-medium">Not enough teams</p>
+            <p className="text-lg font-medium">Not enough {labels.plural.toLowerCase()}</p>
             <p className="mt-1 text-sm text-muted-foreground">
-              You need at least 2 teams to generate a bracket. Add teams first.
+              You need at least 2 {labels.plural.toLowerCase()} to generate a bracket. Add {labels.plural.toLowerCase()} first.
             </p>
             <Link href={ROUTES.organizer.tournament(id)} className="mt-4">
               <Button>Back to Tournament</Button>

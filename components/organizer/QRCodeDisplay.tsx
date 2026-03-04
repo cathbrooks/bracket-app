@@ -1,12 +1,11 @@
 'use client';
 
-import { useRef, useCallback } from 'react';
+import { useRef, useCallback, useState, useEffect } from 'react';
 import { QRCodeSVG } from 'qrcode.react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Download, Printer, Copy, Check } from 'lucide-react';
-import { useState } from 'react';
 
 interface QRCodeDisplayProps {
   joinCode: string;
@@ -16,8 +15,14 @@ interface QRCodeDisplayProps {
 export function QRCodeDisplay({ joinCode, tournamentName }: QRCodeDisplayProps) {
   const svgRef = useRef<HTMLDivElement>(null);
   const [copied, setCopied] = useState(false);
+  const [origin, setOrigin] = useState('');
 
-  const spectatorUrl = `${typeof window !== 'undefined' ? window.location.origin : ''}/spectator/view/${joinCode}`;
+  // Resolve origin only on the client to avoid SSR/hydration mismatch
+  useEffect(() => {
+    setOrigin(window.location.origin);
+  }, []);
+
+  const spectatorUrl = `${origin}/spectator/view/${joinCode}`;
 
   const handleDownload = useCallback(() => {
     const svg = svgRef.current?.querySelector('svg');

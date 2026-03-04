@@ -2,6 +2,7 @@ import { z } from 'zod';
 import {
   TOURNAMENT_FORMATS,
   SEEDING_MODES,
+  PARTICIPANT_TYPES,
   MIN_TEAM_COUNT,
   MAX_TEAM_COUNT,
   MIN_TOURNAMENT_NAME_LENGTH,
@@ -18,6 +19,9 @@ export const basicInfoSchema = z.object({
     .string()
     .min(1, 'Game type is required')
     .max(MAX_GAME_TYPE_LENGTH, `Game type must be at most ${MAX_GAME_TYPE_LENGTH} characters`),
+  participantType: z.enum(PARTICIPANT_TYPES, {
+    errorMap: () => ({ message: 'Please select teams or players' }),
+  }),
 });
 
 export const formatSelectionSchema = z.object({

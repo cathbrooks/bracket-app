@@ -219,16 +219,56 @@ export async function generateBracket(
       }
     }
 
-    // Link losers from winners rounds into losers bracket (even rounds absorb)
+    // Link losers from winners rounds into losers bracket (even rounds absorb).
+    // Bye WR1 matches are skipped — they produce no loser.
     for (let wr = 0; wr < winnersGrid.length; wr++) {
       const losersTarget = wr === 0 ? 0 : 2 * wr - 1;
       if (losersTarget < losersGrid.length) {
         for (let m = 0; m < winnersGrid[wr].length; m++) {
           const wNode = nodes.find((n) => n.id === winnersGrid[wr][m]);
+          if (!wNode || wNode.isBye) continue; // byes have no loser
           const targetMatchIdx = wr === 0 ? Math.floor(m / 2) : m;
-          if (wNode && targetMatchIdx < losersGrid[losersTarget].length) {
+          if (targetMatchIdx < losersGrid[losersTarget].length) {
             wNode.loserNextId = losersGrid[losersTarget][targetMatchIdx];
           }
+        }
+      }
+    }
+
+    // Mark LR1 matches as byes when only one (or zero) non-bye WR1 match feeds into them.
+    // A single-participant LR1 match will be auto-completed by the RPC when the loser arrives.
+    for (const lrMatchId of losersGrid[0] ?? []) {
+      const realFeeders = nodes.filter(
+        (n) =>
+          n.bracketCategory === 'winners' &&
+          n.round === 1 &&
+          !n.isBye &&
+          n.loserNextId === lrMatchId
+      );
+      const lrNode = nodes.find((n) => n.id === lrMatchId);
+      if (!lrNode) continue;
+      if (realFeeders.length <= 1) {
+        lrNode.isBye = true;
+        if (realFeeders.length === 0) {
+          // Both WR1 feeders were byes — nothing will ever arrive; complete immediately
+          lrNode.state = 'completed';
+        }
+        // For 1-feeder byes, state stays 'pending' until the RPC places the single loser
+      }
+    }
+
+    // Propagate bye status downstream: if an odd-round LB match was immediately completed
+    // with no winner (0-feeder case), the even-round match it feeds into will only ever
+    // receive one participant (the WB loser). Flag that even-round match as a bye so the
+    // RPC auto-completes it when the WB loser arrives instead of waiting forever.
+    for (let lr = 0; lr < losersGrid.length - 1; lr += 2) {
+      for (let m = 0; m < losersGrid[lr].length; m++) {
+        const oddNode = nodes.find((n) => n.id === losersGrid[lr][m]);
+        if (!oddNode || oddNode.state !== 'completed' || oddNode.winnerTeamId !== null) continue;
+        const evenMatchId = losersGrid[lr + 1]?.[m];
+        if (evenMatchId) {
+          const evenNode = nodes.find((n) => n.id === evenMatchId);
+          if (evenNode) evenNode.isBye = true;
         }
       }
     }

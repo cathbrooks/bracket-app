@@ -6,6 +6,7 @@ import type {
   SeedingMode,
   BracketCategory,
   EmojiType,
+  ParticipantType,
 } from '@/lib/constants';
 
 // ── Row types (direct DB representations) ──────────────────────────
@@ -22,11 +23,13 @@ export interface Tournament {
   name: string;
   gameType: string;
   format: TournamentFormat;
+  participantType: ParticipantType;
   teamCount: number;
   stationCount: number | null;
   timePerMatchMinutes: number | null;
   seedingMode: SeedingMode;
   estimatedDurationMinutes: number | null;
+  rosterSize: number | null;
   joinCode: string;
   state: TournamentState;
   ownerId: string;
@@ -40,6 +43,7 @@ export interface Team {
   name: string;
   seed: number | null;
   timeTrialResultSeconds: number | null;
+  roster: string[] | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -100,6 +104,7 @@ export interface CreateTournamentInput {
   name: string;
   gameType: string;
   format: TournamentFormat;
+  participantType?: ParticipantType;
   teamCount: number;
   stationCount?: number;
   timePerMatchMinutes?: number;
@@ -179,11 +184,13 @@ export function toTournament(row: TournamentRow): Tournament {
     name: row.name,
     gameType: row.game_type,
     format: row.format,
+    participantType: (row.participant_type ?? 'teams') as ParticipantType,
     teamCount: row.team_count,
     stationCount: row.station_count,
     timePerMatchMinutes: row.time_per_match_minutes,
     seedingMode: row.seeding_mode,
     estimatedDurationMinutes: row.estimated_duration_minutes,
+    rosterSize: row.roster_size ?? null,
     joinCode: row.join_code,
     state: row.state,
     ownerId: row.owner_id,
@@ -199,6 +206,7 @@ export function toTeam(row: TeamRow): Team {
     name: row.name,
     seed: row.seed,
     timeTrialResultSeconds: row.time_trial_result_seconds,
+    roster: (row.roster as string[] | null) ?? null,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   };

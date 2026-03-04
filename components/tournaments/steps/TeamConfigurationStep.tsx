@@ -1,61 +1,140 @@
 'use client';
 
+import { useState } from 'react';
 import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
 import { FormItem, FormLabel, FormDescription, FormMessage } from '@/components/ui/form';
 import { MIN_TEAM_COUNT, MAX_TEAM_COUNT } from '@/lib/constants';
-import { isPowerOfTwo, nextPowerOfTwo, calculateByes } from '@/lib/utils/validation';
-import { AlertTriangle, Info, Timer, ListOrdered } from 'lucide-react';
-import { useEffect, useState, useCallback } from 'react';
+import type { ParticipantType } from '@/lib/constants';
+import { getParticipantLabels } from '@/lib/utils/terminology';
+import { nextPowerOfTwo, calculateByes } from '@/lib/utils/validation';
+import {
+  AlertTriangle,
+  Info,
+  Timer,
+  ListOrdered,
+  ChevronDown,
+  ChevronUp,
+  Plus,
+  Trash2,
+  Users,
+} from 'lucide-react';
+import { useEffect } from 'react';
 import { cn } from '@/lib/utils';
 
 interface TeamConfigData {
+  participantType: ParticipantType;
   teamCount: number;
   teamNames: string[];
   seedingMode: 'manual' | 'time-trial';
+  hasRosters: boolean;
+  teamRosters: string[][];
 }
 
 interface TeamConfigurationStepProps {
   values: TeamConfigData;
-  onChange: (data: TeamConfigData) => void;
+  onChange: (data: Partial<TeamConfigData>) => void;
   onValidChange: (valid: boolean) => void;
 }
 
-export function TeamConfigurationStep({ values, onChange, onValidChange }: TeamConfigurationStepProps) {
-  const [countError, setCountError] = useState<string | null>(null);
+function computeCountValidation(count: number, plural: string) {
+  if (count < MIN_TEAM_COUNT) {
+    return {
+      valid: false,
+      error: `Minimum ${MIN_TEAM_COUNT} ${plural.toLowerCase()} required`,
+    };
+  }
+  if (count > MAX_TEAM_COUNT) {
+    return {
+      valid: false,
+      error: `Maximum ${MAX_TEAM_COUNT} ${plural.toLowerCase()} allowed. This limit ensures optimal bracket performance and readability.`,
+    };
+  }
+  return { valid: true, error: null as string | null };
+}
 
-  const validateCount = useCallback((count: number) => {
-    if (count < MIN_TEAM_COUNT) {
-      setCountError(`Minimum ${MIN_TEAM_COUNT} teams required`);
-      return false;
-    }
-    if (count > MAX_TEAM_COUNT) {
-      setCountError(`Maximum ${MAX_TEAM_COUNT} teams allowed. This limit ensures optimal bracket performance and readability.`);
-      return false;
-    }
-    setCountError(null);
-    return true;
-  }, []);
+export function TeamConfigurationStep({ values, onChange, onValidChange }: TeamConfigurationStepProps) {
+  const labels = getParticipantLabels(values.participantType ?? 'teams');
+  const isTeams = values.participantType === 'teams';
+  const { valid: countValid, error: countError } = computeCountValidation(
+    values.teamCount,
+    labels.plural
+  );
+  const allNamesFilled = values.teamNames
+    .slice(0, values.teamCount)
+    .every((n) => (n ?? '').trim().length > 0);
+
+  // Roster validation: if rosters are enabled, every filled player slot must have a name
+  const rosterValid = !values.hasRosters || values.teamRosters
+    .slice(0, values.teamCount)
+    .every((roster) =>
+      (roster ?? []).every((p) => (p ?? '').trim().length > 0)
+    );
+
+  const isValid = countValid && allNamesFilled && rosterValid;
+  const [expandedTeams, setExpandedTeams] = useState<Set<number>>(new Set());
 
   useEffect(() => {
-    onValidChange(validateCount(values.teamCount));
-  }, [values.teamCount, onValidChange, validateCount]);
+    onValidChange(isValid);
+  }, [isValid, onValidChange]);
 
   function handleCountChange(e: React.ChangeEvent<HTMLInputElement>) {
     const count = parseInt(e.target.value, 10) || 0;
     const clampedCount = Math.min(count, MAX_TEAM_COUNT + 1);
-
     const currentNames = values.teamNames;
-    const newNames = Array.from({ length: clampedCount }, (_, i) =>
-      currentNames[i] ?? ''
-    );
-
-    onChange({ teamCount: clampedCount, teamNames: newNames });
+    const newNames = Array.from({ length: clampedCount }, (_, i) => currentNames[i] ?? '');
+    const currentRosters = values.teamRosters ?? [];
+    const newRosters = Array.from({ length: clampedCount }, (_, i) => currentRosters[i] ?? []);
+    onChange({ teamCount: clampedCount, teamNames: newNames, teamRosters: newRosters });
   }
 
   function handleNameChange(index: number, name: string) {
     const newNames = [...values.teamNames];
     newNames[index] = name;
-    onChange({ ...values, teamNames: newNames });
+    onChange({ teamNames: newNames });
+  }
+
+  function handleRosterToggle() {
+    if (values.hasRosters) {
+      onChange({ hasRosters: false });
+    } else {
+      // Seed each team with one empty player slot
+      const newRosters = Array.from({ length: values.teamCount }, (_, ti) =>
+        values.teamRosters?.[ti]?.length ? values.teamRosters[ti] : ['']
+      );
+      onChange({ hasRosters: true, teamRosters: newRosters });
+    }
+  }
+
+  function handlePlayerNameChange(teamIndex: number, playerIndex: number, name: string) {
+    const newRosters = (values.teamRosters ?? []).map((r, ti) =>
+      ti === teamIndex
+        ? r.map((p, pi) => (pi === playerIndex ? name : p))
+        : r
+    );
+    onChange({ teamRosters: newRosters });
+  }
+
+  function handleAddPlayer(teamIndex: number) {
+    const newRosters = (values.teamRosters ?? []).map((r, ti) =>
+      ti === teamIndex ? [...r, ''] : r
+    );
+    onChange({ teamRosters: newRosters });
+  }
+
+  function handleRemovePlayer(teamIndex: number, playerIndex: number) {
+    const newRosters = (values.teamRosters ?? []).map((r, ti) =>
+      ti === teamIndex ? r.filter((_, pi) => pi !== playerIndex) : r
+    );
+    onChange({ teamRosters: newRosters });
+  }
+
+  function toggleTeamExpanded(index: number) {
+    setExpandedTeams((prev) => {
+      const next = new Set(prev);
+      next.has(index) ? next.delete(index) : next.add(index);
+      return next;
+    });
   }
 
   const byeCount = values.teamCount >= MIN_TEAM_COUNT ? calculateByes(values.teamCount) : 0;
@@ -64,15 +143,15 @@ export function TeamConfigurationStep({ values, onChange, onValidChange }: TeamC
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-lg font-semibold">Team Configuration</h2>
+        <h2 className="text-lg font-semibold">{labels.singular} Configuration</h2>
         <p className="text-sm text-muted-foreground">
-          Set the number of teams and optionally name them.
+          Set the number of {labels.plural.toLowerCase()} and enter each name (required).
         </p>
       </div>
 
       <FormItem>
         <FormLabel htmlFor="teamCount" error={!!countError}>
-          Number of Teams
+          Number of {labels.plural}
         </FormLabel>
         <Input
           id="teamCount"
@@ -84,7 +163,7 @@ export function TeamConfigurationStep({ values, onChange, onValidChange }: TeamC
         />
         <FormMessage>{countError}</FormMessage>
         <FormDescription>
-          Between {MIN_TEAM_COUNT} and {MAX_TEAM_COUNT} teams
+          Between {MIN_TEAM_COUNT} and {MAX_TEAM_COUNT} {labels.plural.toLowerCase()}
         </FormDescription>
       </FormItem>
 
@@ -96,7 +175,7 @@ export function TeamConfigurationStep({ values, onChange, onValidChange }: TeamC
               Bracket will expand to {nextPowerOfTwo(values.teamCount)} slots
             </p>
             <p className="text-blue-700 dark:text-blue-300">
-              {byeCount} higher-seeded team{byeCount > 1 ? 's' : ''} will receive a first-round bye.
+              {byeCount} higher-seeded {labels.singular.toLowerCase()}{byeCount > 1 ? 's' : ''} will receive a first-round bye.
             </p>
           </div>
         </div>
@@ -106,7 +185,7 @@ export function TeamConfigurationStep({ values, onChange, onValidChange }: TeamC
         <div>
           <h3 className="text-sm font-medium">Seeding Method</h3>
           <p className="text-xs text-muted-foreground">
-            Choose how teams will be seeded before the bracket starts.
+            Choose how {labels.plural.toLowerCase()} will be seeded before the bracket starts.
           </p>
         </div>
         <div className="grid gap-3 sm:grid-cols-2">
@@ -114,13 +193,13 @@ export function TeamConfigurationStep({ values, onChange, onValidChange }: TeamC
             {
               value: 'manual' as const,
               label: 'Manual Seeding',
-              description: 'Assign seed numbers to each team yourself.',
+              description: `Assign seed numbers to each ${labels.singular.toLowerCase()} yourself.`,
               icon: ListOrdered,
             },
             {
               value: 'time-trial' as const,
               label: 'Time Trials',
-              description: 'Record a timed run for each team. Fastest gets seed #1.',
+              description: `Record a timed run for each ${labels.singular.toLowerCase()}. Fastest gets seed #1.`,
               icon: Timer,
             },
           ].map((option) => {
@@ -161,11 +240,20 @@ export function TeamConfigurationStep({ values, onChange, onValidChange }: TeamC
       {values.teamCount >= MIN_TEAM_COUNT && values.teamCount <= MAX_TEAM_COUNT && (
         <div className="space-y-3">
           <div className="flex items-center justify-between">
-            <FormLabel>Team Names</FormLabel>
+            <FormLabel>{labels.singular} Names (required)</FormLabel>
             <FormDescription>
-              Leave blank for default names (Team 1, Team 2, etc.)
+              Enter a name for each {labels.singular.toLowerCase()}
             </FormDescription>
           </div>
+
+          {!allNamesFilled && (
+            <div className="flex items-start gap-2 rounded-lg border border-amber-200 bg-amber-50 p-3 dark:border-amber-900 dark:bg-amber-950">
+              <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-amber-600 dark:text-amber-400" />
+              <p className="text-sm text-amber-700 dark:text-amber-300">
+                All {labels.plural.toLowerCase()} must have a name.
+              </p>
+            </div>
+          )}
 
           {duplicates.length > 0 && (
             <div className="flex items-start gap-2 rounded-lg border border-yellow-200 bg-yellow-50 p-3 dark:border-yellow-900 dark:bg-yellow-950">
@@ -176,16 +264,141 @@ export function TeamConfigurationStep({ values, onChange, onValidChange }: TeamC
             </div>
           )}
 
-          <div className="grid gap-2 sm:grid-cols-2">
-            {Array.from({ length: values.teamCount }, (_, i) => (
-              <Input
-                key={i}
-                placeholder={`Team ${i + 1}`}
-                value={values.teamNames[i] ?? ''}
-                onChange={(e) => handleNameChange(i, e.target.value)}
-                maxLength={50}
+          {/* No roster: simple grid of name inputs */}
+          {!values.hasRosters ? (
+            <div className="grid gap-2 sm:grid-cols-2">
+              {Array.from({ length: values.teamCount }, (_, i) => (
+                <Input
+                  key={i}
+                  placeholder={labels.placeholder(i)}
+                  value={values.teamNames[i] ?? ''}
+                  onChange={(e) => handleNameChange(i, e.target.value)}
+                  maxLength={50}
+                />
+              ))}
+            </div>
+          ) : (
+            /* Rosters enabled: each team is an expandable card */
+            <div className="space-y-2">
+              {Array.from({ length: values.teamCount }, (_, i) => {
+                const isExpanded = expandedTeams.has(i);
+                const roster = values.teamRosters?.[i] ?? [];
+                const teamName = values.teamNames[i] ?? '';
+                const hasMissingPlayers = roster.some((p) => !p.trim());
+                return (
+                  <div key={i} className="rounded-lg border">
+                    {/* Team header row */}
+                    <div className="flex items-center gap-2 p-2">
+                      <Input
+                        placeholder={labels.placeholder(i)}
+                        value={teamName}
+                        onChange={(e) => handleNameChange(i, e.target.value)}
+                        maxLength={50}
+                        className="flex-1"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => toggleTeamExpanded(i)}
+                        className={cn(
+                          'flex shrink-0 items-center gap-1 rounded-md px-2 py-1.5 text-xs font-medium transition-colors',
+                          hasMissingPlayers
+                            ? 'text-amber-600 hover:bg-amber-50'
+                            : 'text-muted-foreground hover:bg-muted'
+                        )}
+                      >
+                        <Users className="h-3.5 w-3.5" />
+                        {roster.length} player{roster.length !== 1 ? 's' : ''}
+                        {isExpanded
+                          ? <ChevronUp className="h-3 w-3" />
+                          : <ChevronDown className="h-3 w-3" />}
+                      </button>
+                    </div>
+
+                    {/* Expanded player list */}
+                    {isExpanded && (
+                      <div className="border-t bg-muted/30 px-3 pb-3 pt-2 space-y-2">
+                        <p className="text-xs font-medium text-muted-foreground">
+                          Players on {teamName || labels.placeholder(i)}
+                        </p>
+
+                        {roster.length === 0 && (
+                          <p className="text-xs text-muted-foreground italic">
+                            No players added yet.
+                          </p>
+                        )}
+
+                        <div className="space-y-1.5">
+                          {roster.map((player, pi) => (
+                            <div key={pi} className="flex items-center gap-2">
+                              <span className="w-5 text-center text-xs text-muted-foreground shrink-0">
+                                {pi + 1}
+                              </span>
+                              <Input
+                                placeholder={`Player ${pi + 1}`}
+                                value={player}
+                                onChange={(e) => handlePlayerNameChange(i, pi, e.target.value)}
+                                maxLength={50}
+                                className="h-8 flex-1 text-sm"
+                              />
+                              <button
+                                type="button"
+                                onClick={() => handleRemovePlayer(i, pi)}
+                                className="shrink-0 rounded p-1 text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors"
+                                aria-label={`Remove player ${pi + 1}`}
+                              >
+                                <Trash2 className="h-3.5 w-3.5" />
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          className="w-full mt-1"
+                          onClick={() => handleAddPlayer(i)}
+                        >
+                          <Plus className="mr-1.5 h-3.5 w-3.5" />
+                          Add Player
+                        </Button>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Roster toggle – only for teams */}
+      {isTeams && values.teamCount >= MIN_TEAM_COUNT && values.teamCount <= MAX_TEAM_COUNT && (
+        <div className="rounded-lg border p-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium">Team Rosters (optional)</p>
+              <p className="text-xs text-muted-foreground">
+                Name the players on each team — teams can have different sizes
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={handleRosterToggle}
+              className={cn(
+                'relative h-6 w-11 rounded-full transition-colors',
+                values.hasRosters ? 'bg-primary' : 'bg-muted'
+              )}
+              aria-checked={values.hasRosters}
+              role="switch"
+            >
+              <span
+                className={cn(
+                  'absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-transform',
+                  values.hasRosters ? 'translate-x-5' : 'translate-x-0.5'
+                )}
               />
-            ))}
+            </button>
           </div>
         </div>
       )}

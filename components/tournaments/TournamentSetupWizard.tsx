@@ -10,17 +10,22 @@ import { FormatSelectionStep } from './steps/FormatSelectionStep';
 import { TeamConfigurationStep } from './steps/TeamConfigurationStep';
 import { TimingConfigurationStep } from './steps/TimingConfigurationStep';
 import { ReviewStep } from './steps/ReviewStep';
-import type { TournamentFormat } from '@/lib/constants';
+import type { TournamentFormat, ParticipantType } from '@/lib/constants';
 
 const TOTAL_STEPS = 5;
 
 interface WizardConfig {
   name: string;
   gameType: string;
+  participantType: ParticipantType;
   format: TournamentFormat;
   grandFinalsReset: boolean;
   teamCount: number;
   teamNames: string[];
+  /** Whether team rosters are enabled (teams can have different sizes) */
+  hasRosters: boolean;
+  /** teamIndex → player names array (variable length per team) */
+  teamRosters: string[][];
   stationCount: number;
   matchDurationMinutes: number;
   bufferTimeMinutes: number;
@@ -30,10 +35,13 @@ interface WizardConfig {
 const INITIAL_CONFIG: WizardConfig = {
   name: '',
   gameType: '',
+  participantType: 'teams',
   format: 'single-elimination',
   grandFinalsReset: true,
   teamCount: 8,
   teamNames: Array(8).fill(''),
+  hasRosters: false,
+  teamRosters: Array(8).fill(null).map(() => []),
   stationCount: 1,
   matchDurationMinutes: 10,
   bufferTimeMinutes: 2,
@@ -85,12 +93,14 @@ export function TournamentSetupWizard() {
         body: JSON.stringify({
           name: config.name,
           gameType: config.gameType,
+          participantType: config.participantType,
           format: config.format,
           teamCount: config.teamCount,
           stationCount: config.stationCount,
           timePerMatchMinutes: timePerMatch > 0 ? timePerMatch : undefined,
           seedingMode: config.seedingMode,
           teamNames: config.teamNames,
+          teamRosters: config.hasRosters ? config.teamRosters : undefined,
         }),
       });
 
@@ -111,7 +121,7 @@ export function TournamentSetupWizard() {
 
   return (
     <div className="mx-auto max-w-2xl">
-      <StepIndicator currentStep={currentStep} />
+      <StepIndicator currentStep={currentStep} participantType={config.participantType} />
 
       <Card>
         <CardContent className="p-6">
@@ -123,7 +133,11 @@ export function TournamentSetupWizard() {
 
           {currentStep === 0 && (
             <BasicInfoStep
-              values={{ name: config.name, gameType: config.gameType }}
+              values={{
+                name: config.name,
+                gameType: config.gameType,
+                participantType: config.participantType,
+              }}
               onChange={(data) => setConfig((c) => ({ ...c, ...data }))}
               onValidChange={handleValidChange}
             />
@@ -149,16 +163,21 @@ export function TournamentSetupWizard() {
           {currentStep === 2 && (
             <TeamConfigurationStep
               values={{
+                participantType: config.participantType,
                 teamCount: config.teamCount,
                 teamNames: config.teamNames,
                 seedingMode: config.seedingMode,
+                hasRosters: config.hasRosters,
+                teamRosters: config.teamRosters,
               }}
               onChange={(data) =>
                 setConfig((c) => ({
                   ...c,
-                  teamCount: data.teamCount,
-                  teamNames: data.teamNames,
-                  seedingMode: data.seedingMode,
+                  ...(data.teamCount !== undefined && { teamCount: data.teamCount }),
+                  ...(data.teamNames !== undefined && { teamNames: data.teamNames }),
+                  ...(data.seedingMode !== undefined && { seedingMode: data.seedingMode }),
+                  ...(data.hasRosters !== undefined && { hasRosters: data.hasRosters }),
+                  ...(data.teamRosters !== undefined && { teamRosters: data.teamRosters }),
                 }))
               }
               onValidChange={handleValidChange}

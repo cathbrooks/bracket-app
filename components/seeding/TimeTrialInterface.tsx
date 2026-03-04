@@ -10,6 +10,8 @@ import { Button } from '@/components/ui/button';
 import { formatTime } from '@/lib/utils/format';
 import { Check, Clock, ListOrdered } from 'lucide-react';
 import type { Team } from '@/lib/types/tournament.types';
+import type { ParticipantType } from '@/lib/constants';
+import { getParticipantLabels } from '@/lib/utils/terminology';
 
 interface RecordedTime {
   teamId: string;
@@ -28,6 +30,7 @@ interface LeaderboardEntry {
 interface TimeTrialInterfaceProps {
   tournamentId: string;
   teams: Team[];
+  participantType: ParticipantType;
   stationCount: number;
   onComplete: () => void;
 }
@@ -37,9 +40,11 @@ type Phase = 'timing' | 'leaderboard';
 export function TimeTrialInterface({
   tournamentId,
   teams,
+  participantType = 'teams',
   stationCount,
   onComplete,
 }: TimeTrialInterfaceProps) {
+  const labels = getParticipantLabels(participantType);
   const [phase, setPhase] = useState<Phase>('timing');
   const [recordedTimes, setRecordedTimes] = useState<Map<string, RecordedTime>>(new Map());
   const [pendingTime, setPendingTime] = useState<{ centiseconds: number; station: number } | null>(null);
@@ -138,8 +143,8 @@ export function TimeTrialInterface({
       <div>
         <h2 className="text-lg font-semibold">Time Trials</h2>
         <p className="text-sm text-muted-foreground">
-          Time each team using the stopwatches or enter times manually.
-          Record times for all {teams.length} teams to generate the leaderboard.
+          Time each {labels.singular.toLowerCase()} using the stopwatches or enter times manually.
+          Record times for all {teams.length} {labels.plural.toLowerCase()} to generate the leaderboard.
         </p>
       </div>
 
@@ -161,7 +166,7 @@ export function TimeTrialInterface({
         )}
       </div>
 
-      {/* Team assignment dialog when a stopwatch has a pending time */}
+      {/* Participant assignment dialog when a stopwatch has a pending time */}
       {pendingTime && (
         <Card className="border-primary">
           <CardContent className="p-4">

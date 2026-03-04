@@ -8,6 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Badge } from '@/components/ui/badge';
 import type { Tournament, Team } from '@/lib/types/tournament.types';
 import { formatTime } from '@/lib/utils';
+import { getParticipantLabels } from '@/lib/utils/terminology';
 
 interface SeedingManagerProps {
   tournament: Tournament;
@@ -16,6 +17,7 @@ interface SeedingManagerProps {
 
 export function SeedingManager({ tournament, initialTeams }: SeedingManagerProps) {
   const router = useRouter();
+  const labels = getParticipantLabels(tournament.participantType ?? 'teams');
   const [seeds, setSeeds] = useState<Record<string, number>>(() => {
     const map: Record<string, number> = {};
     initialTeams.forEach((t) => {
@@ -47,7 +49,7 @@ export function SeedingManager({ tournament, initialTeams }: SeedingManagerProps
       .map(([teamId, seed]) => ({ teamId, seed }));
 
     if (seedList.length < 2) {
-      setError('At least 2 teams must be seeded.');
+      setError(`At least 2 ${labels.plural.toLowerCase()} must be seeded.`);
       setLoading(false);
       return;
     }
@@ -119,7 +121,7 @@ export function SeedingManager({ tournament, initialTeams }: SeedingManagerProps
     if (errors.length > 0) {
       setError(errors.join('; '));
     } else {
-      setSuccess(`Saved times for ${entries.length} team${entries.length > 1 ? 's' : ''}.`);
+      setSuccess(`Saved times for ${entries.length} ${labels.singular.toLowerCase()}${entries.length > 1 ? 's' : ''}.`);
     }
 
     setLoading(false);
@@ -137,7 +139,7 @@ export function SeedingManager({ tournament, initialTeams }: SeedingManagerProps
       });
       const json = await res.json();
       if (!res.ok) throw new Error(json.error ?? 'Failed to generate seeds');
-      setSuccess('Seeds generated from time trial results! Fastest team gets seed #1.');
+      setSuccess(`Seeds generated from time trial results! Fastest ${labels.singular.toLowerCase()} gets seed #1.`);
       router.refresh();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Something went wrong');
@@ -216,7 +218,7 @@ export function SeedingManager({ tournament, initialTeams }: SeedingManagerProps
             <CardHeader>
               <CardTitle>Time Trial Seeding</CardTitle>
               <CardDescription>
-                Enter each team&apos;s time trial result in seconds. The fastest team will be
+                Enter each {labels.possessive} time trial result in seconds. The fastest will be
                 seeded #1. Save all times, then generate seeds.
               </CardDescription>
             </CardHeader>
@@ -281,7 +283,7 @@ export function SeedingManager({ tournament, initialTeams }: SeedingManagerProps
                     title={
                       allTimesEntered
                         ? 'Generate seeds from recorded times'
-                        : 'Save times for all teams first'
+                        : `Save times for all ${labels.plural.toLowerCase()} first`
                     }
                   >
                     {loading ? 'Generating...' : 'Generate Seeds from Times'}

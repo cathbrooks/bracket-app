@@ -22,38 +22,82 @@ export const GET = withErrorHandler(async (
     throw new NotFoundError('Tournament', id);
   }
 
+  // Fetch all completed non-bye matches so we can compute scores on the fly.
+  // Points double each round: round 1 = 1pt, round 2 = 2pts, round 3 = 4pts, etc.
+  const { data: completedMatches } = await supabase
+    .from('matches')
+    .select('id, round, winner_team_id')
+    .eq('tournament_id', id)
+    .eq('is_bye', false)
+    .eq('state', 'completed')
+    .not('winner_team_id', 'is', null);
+
+  const matchResults = new Map<string, { winnerId: string; points: number }>();
+  for (const m of completedMatches ?? []) {
+    const row = m as { id: string; round: number; winner_team_id: string };
+    matchResults.set(row.id, {
+      winnerId: row.winner_team_id,
+      points: Math.pow(2, row.round - 1),
+    });
+  }
+
+  const totalPlayableMatches = matchResults.size;
+
+  // Fetch all predictions
   const { data: predictions } = await supabase
     .from('bracket_predictions')
-    .select('*')
-    .eq('tournament_id', id)
-    .order('total_points', { ascending: false })
-    .order('correct_count', { ascending: false });
+    .select('id, display_name, session_id, predictions')
+    .eq('tournament_id', id);
 
   const rows = (predictions ?? []) as unknown as {
     id: string;
     display_name: string;
-    total_points: number;
-    correct_count: number;
     session_id: string;
     predictions: Record<string, string> | null;
   }[];
 
-  const totalMatches = await supabase
-    .from('matches')
-    .select('id', { count: 'exact', head: true })
-    .eq('tournament_id', id)
-    .neq('is_bye', true);
+  // Compute scores dynamically from match results
+  const scored = rows.map((row) => {
+    const picks = row.predictions ?? {};
+    let totalPoints = 0;
+    let correctCount = 0;
 
-  const matchCount = totalMatches.count ?? 0;
+    for (const [matchId, result] of matchResults) {
+      const predicted = picks[matchId];
+      if (predicted === result.winnerId) {
+        totalPoints += result.points;
+        correctCount++;
+      }
+    }
 
-  const leaderboard = rows.map((row, index) => ({
+    return {
+      id: row.id,
+      displayName: row.display_name,
+      sessionId: row.session_id,
+      predictions: picks,
+      totalPoints,
+      correctCount,
+    };
+  });
+
+  // Sort by points desc, then correct count desc
+  scored.sort((a, b) =>
+    b.totalPoints !== a.totalPoints
+      ? b.totalPoints - a.totalPoints
+      : b.correctCount - a.correctCount
+  );
+
+  const leaderboard = scored.map((entry, index) => ({
     rank: index + 1,
-    displayName: row.display_name,
-    totalPoints: row.total_points,
-    correctCount: row.correct_count,
-    accuracy: matchCount > 0 ? Math.round((row.correct_count / matchCount) * 100) : 0,
-    sessionId: row.session_id,
-    predictions: row.predictions ?? {},
+    displayName: entry.displayName,
+    totalPoints: entry.totalPoints,
+    correctCount: entry.correctCount,
+    accuracy:
+      totalPlayableMatches > 0
+        ? Math.round((entry.correctCount / totalPlayableMatches) * 100)
+        : 0,
+    sessionId: entry.sessionId,
+    predictions: entry.predictions,
   }));
 
   return NextResponse.json({

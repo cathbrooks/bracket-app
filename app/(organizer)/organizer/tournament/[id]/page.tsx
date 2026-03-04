@@ -4,6 +4,7 @@ import { createClient } from '@/lib/supabase/server';
 import { requireAuth } from '@/lib/auth/server';
 import { toTournament, toTeam, toMatch } from '@/lib/types/tournament.types';
 import { ROUTES } from '@/lib/constants';
+import { getParticipantLabels } from '@/lib/utils/terminology';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -78,6 +79,7 @@ export default async function TournamentDetailPage({
   const completedMatches = matches.filter((m) => m.state === 'completed').length;
   const totalMatches = matches.filter((m) => !m.isBye).length;
   const seededTeams = teams.filter((tm) => tm.seed !== null).length;
+  const labels = getParticipantLabels(t.participantType ?? 'teams');
 
   return (
     <div className="container py-8">
@@ -92,7 +94,7 @@ export default async function TournamentDetailPage({
           <p className="mt-1 text-muted-foreground">
             {t.gameType} &middot;{' '}
             {t.format === 'double-elimination' ? 'Double Elimination' : 'Single Elimination'}{' '}
-            &middot; {t.teamCount} teams
+            &middot; {t.teamCount} {labels.plural.toLowerCase()}
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
@@ -112,7 +114,7 @@ export default async function TournamentDetailPage({
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground">
-              Teams
+              {labels.plural}
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -161,11 +163,11 @@ export default async function TournamentDetailPage({
       <div className="mt-8 grid gap-6 lg:grid-cols-2">
         <Card>
           <CardHeader>
-            <CardTitle>Teams</CardTitle>
+            <CardTitle>{labels.plural}</CardTitle>
           </CardHeader>
           <CardContent>
             {teams.length === 0 ? (
-              <p className="text-sm text-muted-foreground">No teams registered.</p>
+              <p className="text-sm text-muted-foreground">No {labels.plural.toLowerCase()} registered.</p>
             ) : (
               <div className="space-y-2">
                 {teams.map((tm) => (

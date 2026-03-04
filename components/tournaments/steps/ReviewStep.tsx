@@ -6,15 +6,19 @@ import { Badge } from '@/components/ui/badge';
 import { Pencil, Clock } from 'lucide-react';
 import { calculateDuration } from '@/lib/utils/calculation';
 import { isPowerOfTwo, nextPowerOfTwo, calculateByes } from '@/lib/utils/validation';
-import type { TournamentFormat } from '@/lib/constants';
+import type { TournamentFormat, ParticipantType } from '@/lib/constants';
+import { getParticipantLabels } from '@/lib/utils/terminology';
 
 interface WizardConfig {
   name: string;
   gameType: string;
+  participantType: ParticipantType;
   format: TournamentFormat;
   grandFinalsReset: boolean;
   teamCount: number;
   teamNames: string[];
+  hasRosters: boolean;
+  teamRosters: string[][];
   stationCount: number;
   matchDurationMinutes: number;
   bufferTimeMinutes: number;
@@ -28,6 +32,7 @@ interface ReviewStepProps {
 
 export function ReviewStep({ config, onEditStep }: ReviewStepProps) {
   const timePerMatch = config.matchDurationMinutes + config.bufferTimeMinutes;
+  const labels = getParticipantLabels(config.participantType ?? 'teams');
 
   const estimate = timePerMatch > 0
     ? calculateDuration({
@@ -69,6 +74,7 @@ export function ReviewStep({ config, onEditStep }: ReviewStepProps) {
         <ReviewCard title="Basic Info" onEdit={() => onEditStep(0)}>
           <ReviewField label="Tournament Name" value={config.name} />
           <ReviewField label="Game" value={config.gameType} />
+          <ReviewField label="Participant Type" value={labels.plural} />
         </ReviewCard>
 
         <ReviewCard title="Format" onEdit={() => onEditStep(1)}>
@@ -88,8 +94,8 @@ export function ReviewStep({ config, onEditStep }: ReviewStepProps) {
           )}
         </ReviewCard>
 
-        <ReviewCard title="Teams" onEdit={() => onEditStep(2)}>
-          <ReviewField label="Team Count" value={String(config.teamCount)} />
+        <ReviewCard title={labels.plural} onEdit={() => onEditStep(2)}>
+          <ReviewField label={`${labels.singular} Count`} value={String(config.teamCount)} />
           <ReviewField
             label="Seeding"
             value={config.seedingMode === 'time-trial' ? 'Time Trials' : 'Manual'}
@@ -101,12 +107,28 @@ export function ReviewStep({ config, onEditStep }: ReviewStepProps) {
             />
           )}
           {config.teamNames.filter(n => n.trim()).length > 0 && (
-            <div className="mt-2 flex flex-wrap gap-1">
-              {config.teamNames.map((name, i) => (
-                <Badge key={i} variant="secondary" className="text-xs">
-                  {name.trim() || `Team ${i + 1}`}
-                </Badge>
-              ))}
+            <div className="mt-2 space-y-1">
+              {config.teamNames.map((name, i) => {
+                const roster = config.teamRosters?.[i] ?? [];
+                const filledPlayers = roster.filter(p => p.trim());
+                return (
+                  <div key={i}>
+                    <Badge variant="secondary" className="text-xs">
+                      {name.trim() || labels.placeholder(i)}
+                      {config.hasRosters && filledPlayers.length > 0 && (
+                        <span className="ml-1 font-normal opacity-70">
+                          ({filledPlayers.length} player{filledPlayers.length !== 1 ? 's' : ''})
+                        </span>
+                      )}
+                    </Badge>
+                    {config.hasRosters && filledPlayers.length > 0 && (
+                      <p className="mt-0.5 ml-1 text-xs text-muted-foreground">
+                        {filledPlayers.join(', ')}
+                      </p>
+                    )}
+                  </div>
+                );
+              })}
             </div>
           )}
         </ReviewCard>

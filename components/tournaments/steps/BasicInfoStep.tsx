@@ -11,6 +11,8 @@ import {
   MAX_GAME_TYPE_LENGTH,
 } from '@/lib/constants';
 import { useEffect } from 'react';
+import { cn } from '@/lib/utils';
+import { Users, User } from 'lucide-react';
 
 interface BasicInfoStepProps {
   values: BasicInfoFormData;
@@ -22,10 +24,11 @@ export function BasicInfoStep({ values, onChange, onValidChange }: BasicInfoStep
   const {
     register,
     watch,
+    setValue,
     formState: { errors, isValid },
   } = useForm<BasicInfoFormData>({
     resolver: zodResolver(basicInfoSchema),
-    defaultValues: values,
+    defaultValues: { ...values, participantType: values.participantType ?? 'teams' },
     mode: 'onChange',
   });
 
@@ -36,10 +39,14 @@ export function BasicInfoStep({ values, onChange, onValidChange }: BasicInfoStep
   }, [isValid, onValidChange]);
 
   useEffect(() => {
-    if (watched.name !== values.name || watched.gameType !== values.gameType) {
+    if (
+      watched.name !== values.name ||
+      watched.gameType !== values.gameType ||
+      watched.participantType !== values.participantType
+    ) {
       onChange(watched);
     }
-  }, [watched.name, watched.gameType, onChange, values.name, values.gameType]);
+  }, [watched.name, watched.gameType, watched.participantType, onChange, values]);
 
   return (
     <div className="space-y-6">
@@ -68,6 +75,37 @@ export function BasicInfoStep({ values, onChange, onValidChange }: BasicInfoStep
         <FormDescription>
           Min {MIN_TOURNAMENT_NAME_LENGTH} characters
         </FormDescription>
+      </FormItem>
+
+      <FormItem>
+        <FormLabel error={!!errors.participantType}>
+          Will this tournament have teams or individual players?
+        </FormLabel>
+        <div className="grid grid-cols-2 gap-3 pt-2">
+          {[
+            { value: 'teams' as const, label: 'Teams', icon: Users },
+            { value: 'players' as const, label: 'Players', icon: User },
+          ].map(({ value, label, icon: Icon }) => {
+            const isSelected = watched.participantType === value;
+            return (
+              <button
+                key={value}
+                type="button"
+                onClick={() => setValue('participantType', value, { shouldValidate: true })}
+                className={cn(
+                  'flex items-center justify-center gap-2 rounded-lg border-2 py-3 transition-all',
+                  isSelected
+                    ? 'border-primary bg-primary/10 ring-1 ring-primary/20'
+                    : 'border-border hover:border-primary/50'
+                )}
+              >
+                <Icon className="h-5 w-5" />
+                <span className="font-medium">{label}</span>
+              </button>
+            );
+          })}
+        </div>
+        <FormMessage>{errors.participantType?.message}</FormMessage>
       </FormItem>
 
       <FormItem>

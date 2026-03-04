@@ -8,10 +8,13 @@ import { FormMessage } from '@/components/ui/form';
 import { AlertTriangle, Check } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { Team } from '@/lib/types/tournament.types';
+import type { ParticipantType } from '@/lib/constants';
+import { getParticipantLabels } from '@/lib/utils/terminology';
 
 interface ManualSeedingInterfaceProps {
   tournamentId: string;
   teams: Team[];
+  participantType: ParticipantType;
   onComplete: () => void;
 }
 
@@ -84,7 +87,7 @@ export function ManualSeedingInterface({
       <div>
         <h2 className="text-lg font-semibold">Manual Seeding</h2>
         <p className="text-sm text-muted-foreground">
-          Assign a unique seed (1 to {teams.length}) to each team. Seed 1 is the strongest.
+          Assign a unique seed (1 to {teams.length}) to each {labels.singular.toLowerCase()}. Seed 1 is the strongest.
         </p>
       </div>
 
@@ -144,7 +147,7 @@ export function ManualSeedingInterface({
 
       {!allAssigned && seedValues.length > 0 && (
         <FormMessage>
-          All teams must have a seed assigned before proceeding.
+          All {labels.plural.toLowerCase()} must have a seed assigned before proceeding.
         </FormMessage>
       )}
 

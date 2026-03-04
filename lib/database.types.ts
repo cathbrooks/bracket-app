@@ -15,11 +15,13 @@ export type Database = {
           name: string;
           game_type: string;
           format: 'single-elimination' | 'double-elimination';
+          participant_type: 'teams' | 'players';
           team_count: number;
           station_count: number | null;
           time_per_match_minutes: number | null;
           seeding_mode: 'manual' | 'time-trial';
           estimated_duration_minutes: number | null;
+          roster_size: number | null;
           join_code: string;
           state: 'draft' | 'registration' | 'seeding' | 'in-progress' | 'completed';
           owner_id: string;
@@ -31,11 +33,13 @@ export type Database = {
           name: string;
           game_type: string;
           format: 'single-elimination' | 'double-elimination';
+          participant_type?: 'teams' | 'players';
           team_count: number;
           station_count?: number | null;
           time_per_match_minutes?: number | null;
           seeding_mode?: 'manual' | 'time-trial';
           estimated_duration_minutes?: number | null;
+          roster_size?: number | null;
           join_code: string;
           state?: 'draft' | 'registration' | 'seeding' | 'in-progress' | 'completed';
           owner_id: string;
@@ -47,11 +51,13 @@ export type Database = {
           name?: string;
           game_type?: string;
           format?: 'single-elimination' | 'double-elimination';
+          participant_type?: 'teams' | 'players';
           team_count?: number;
           station_count?: number | null;
           time_per_match_minutes?: number | null;
           seeding_mode?: 'manual' | 'time-trial';
           estimated_duration_minutes?: number | null;
+          roster_size?: number | null;
           join_code?: string;
           state?: 'draft' | 'registration' | 'seeding' | 'in-progress' | 'completed';
           owner_id?: string;
@@ -67,6 +73,7 @@ export type Database = {
           name: string;
           seed: number | null;
           time_trial_result_seconds: number | null;
+          roster: string[] | null;
           created_at: string;
           updated_at: string;
         };
@@ -76,6 +83,7 @@ export type Database = {
           name: string;
           seed?: number | null;
           time_trial_result_seconds?: number | null;
+          roster?: string[] | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -85,6 +93,7 @@ export type Database = {
           name?: string;
           seed?: number | null;
           time_trial_result_seconds?: number | null;
+          roster?: string[] | null;
           created_at?: string;
           updated_at?: string;
         };

@@ -11,8 +11,8 @@ interface TournamentActionsProps {
 }
 
 const NEXT_STATE: Record<string, { label: string; target: string } | null> = {
-  draft: { label: 'Open Registration', target: 'registration' },
-  registration: { label: 'Start Seeding', target: 'seeding' },
+  draft: { label: 'Start Tournament', target: 'in-progress' },
+  registration: { label: 'Start Tournament', target: 'in-progress' },
   seeding: { label: 'Start Tournament', target: 'in-progress' },
   'in-progress': null,
   completed: null,
