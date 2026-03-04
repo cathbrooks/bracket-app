@@ -11,7 +11,7 @@ import { TournamentSettingsForm } from '@/components/tournaments/TournamentSetti
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const supabase = await createClient();
-  const { data } = await supabase.from('tournaments').select('name').eq('id', id).single();
+  const { data } = await supabase.from('tournaments').select('name').eq('id', id).single<{ name: string }>();
   return { title: data ? `Settings – ${data.name} | Bracket App` : 'Settings | Bracket App' };
 }
 

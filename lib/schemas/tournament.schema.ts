@@ -20,7 +20,7 @@ export const basicInfoSchema = z.object({
     .min(1, 'Game type is required')
     .max(MAX_GAME_TYPE_LENGTH, `Game type must be at most ${MAX_GAME_TYPE_LENGTH} characters`),
   participantType: z.enum(PARTICIPANT_TYPES, {
-    errorMap: () => ({ message: 'Please select teams or players' }),
+    error: 'Please select teams or players',
   }),
 });
 

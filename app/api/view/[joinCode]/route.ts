@@ -26,19 +26,20 @@ export const GET = withErrorHandler(async (
 
   const tournamentRow = tournament as unknown as Tables<'tournaments'>;
 
-  const { data: teams } = await supabase
-    .from('teams')
-    .select('*')
-    .eq('tournament_id', tournamentRow.id)
-    .order('seed', { ascending: true, nullsFirst: false })
-    .order('created_at', { ascending: true });
-
-  const { data: matches } = await supabase
-    .from('matches')
-    .select('*')
-    .eq('tournament_id', tournamentRow.id)
-    .order('round', { ascending: true })
-    .order('match_number', { ascending: true });
+  const [{ data: teams }, { data: matches }] = await Promise.all([
+    supabase
+      .from('teams')
+      .select('*')
+      .eq('tournament_id', tournamentRow.id)
+      .order('seed', { ascending: true, nullsFirst: false })
+      .order('created_at', { ascending: true }),
+    supabase
+      .from('matches')
+      .select('*')
+      .eq('tournament_id', tournamentRow.id)
+      .order('round', { ascending: true })
+      .order('match_number', { ascending: true }),
+  ]);
 
   const teamRows = (teams ?? []) as unknown as Tables<'teams'>[];
   const matchRows = (matches ?? []) as unknown as Tables<'matches'>[];

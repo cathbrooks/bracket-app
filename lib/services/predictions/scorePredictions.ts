@@ -24,35 +24,57 @@ export async function scorePredictionsForMatch(
 
   const predRows = predictions as unknown as Tables<'prediction_scores'>[];
 
-  for (const pred of predRows) {
-    const correct = pred.predicted_winner_team_id === winnerTeamId;
-    const earned = correct ? points : 0;
+  const correctIds = predRows
+    .filter((p) => p.predicted_winner_team_id === winnerTeamId)
+    .map((p) => p.id);
+  const incorrectIds = predRows
+    .filter((p) => p.predicted_winner_team_id !== winnerTeamId)
+    .map((p) => p.id);
 
-    await supabase
-      .from('prediction_scores')
-      .update({
-        actual_winner_team_id: winnerTeamId,
-        points_earned: earned,
-      } as never)
-      .eq('id', pred.id);
-
-    if (correct) {
-      const { data: allScores } = await supabase
+  // Batch update all prediction_scores in parallel — two calls instead of one per row
+  await Promise.all([
+    correctIds.length > 0 &&
+      supabase
         .from('prediction_scores')
-        .select('points_earned')
-        .eq('bracket_prediction_id', pred.bracket_prediction_id);
+        .update({ actual_winner_team_id: winnerTeamId, points_earned: points } as never)
+        .in('id', correctIds),
+    incorrectIds.length > 0 &&
+      supabase
+        .from('prediction_scores')
+        .update({ actual_winner_team_id: winnerTeamId, points_earned: 0 } as never)
+        .in('id', incorrectIds),
+  ]);
 
-      const scoreRows = (allScores ?? []) as unknown as { points_earned: number }[];
-      const totalPoints = scoreRows.reduce((sum, s) => sum + s.points_earned, 0);
-      const correctCount = scoreRows.filter((s) => s.points_earned > 0).length;
+  // Fetch all scores for affected bracket_predictions in one query
+  const bracketPredictionIds = [...new Set(predRows.map((p) => p.bracket_prediction_id))];
 
-      await supabase
-        .from('bracket_predictions')
-        .update({
-          total_points: totalPoints,
-          correct_count: correctCount,
-        } as never)
-        .eq('id', pred.bracket_prediction_id);
+  const { data: allScores } = await supabase
+    .from('prediction_scores')
+    .select('bracket_prediction_id, points_earned')
+    .in('bracket_prediction_id', bracketPredictionIds);
+
+  if (!allScores || allScores.length === 0) return;
+
+  // Aggregate totals in memory
+  const totals = new Map<string, { totalPoints: number; correctCount: number }>();
+  for (const id of bracketPredictionIds) {
+    totals.set(id, { totalPoints: 0, correctCount: 0 });
+  }
+  for (const score of allScores as unknown as { bracket_prediction_id: string; points_earned: number }[]) {
+    const entry = totals.get(score.bracket_prediction_id);
+    if (entry) {
+      entry.totalPoints += score.points_earned;
+      if (score.points_earned > 0) entry.correctCount++;
     }
   }
+
+  // Update all bracket_predictions in parallel instead of sequentially
+  await Promise.all(
+    [...totals.entries()].map(([id, { totalPoints, correctCount }]) =>
+      supabase
+        .from('bracket_predictions')
+        .update({ total_points: totalPoints, correct_count: correctCount } as never)
+        .eq('id', id)
+    )
+  );
 }

@@ -17,8 +17,8 @@ interface MatchCardProps {
 export function MatchCard({ match, teamA, teamB, compact = false, onClick, children }: MatchCardProps) {
   const displayState = getMatchDisplayState(match);
   const styles = getMatchStateStyles(displayState);
-  const isWinnerA = match.winnerTeamId === match.teamAId && match.winnerTeamId !== null;
-  const isWinnerB = match.winnerTeamId === match.teamBId && match.winnerTeamId !== null;
+  const isWinnerA = !match.isBye && match.winnerTeamId === match.teamAId && match.winnerTeamId !== null;
+  const isWinnerB = !match.isBye && match.winnerTeamId === match.teamBId && match.winnerTeamId !== null;
 
   return (
     <div
@@ -51,17 +51,17 @@ export function MatchCard({ match, teamA, teamB, compact = false, onClick, child
 
       <div className={cn('mt-1 space-y-0.5', compact ? 'text-xs' : 'text-sm')}>
         <TeamRow
-          name={teamA?.name ?? (match.teamAId ? '...' : 'TBD')}
+          name={teamA?.name ?? (match.teamAId ? '...' : match.isBye ? 'bye' : 'TBD')}
           isWinner={isWinnerA}
-          isLoser={!isWinnerA && match.state === 'completed' && match.winnerTeamId !== null}
+          isLoser={!match.isBye && !isWinnerA && match.state === 'completed' && match.winnerTeamId !== null}
           seed={teamA?.seed}
           styles={styles}
         />
         <div className="border-t border-border/50" />
         <TeamRow
-          name={teamB?.name ?? (match.teamBId ? '...' : 'TBD')}
+          name={teamB?.name ?? (match.teamBId ? '...' : match.isBye ? 'bye' : 'TBD')}
           isWinner={isWinnerB}
-          isLoser={!isWinnerB && match.state === 'completed' && match.winnerTeamId !== null}
+          isLoser={!match.isBye && !isWinnerB && match.state === 'completed' && match.winnerTeamId !== null}
           seed={teamB?.seed}
           styles={styles}
         />

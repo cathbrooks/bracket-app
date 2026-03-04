@@ -21,12 +21,6 @@ export default function HomePage() {
           >
             Create Tournament
           </Link>
-          <Link
-            href={ROUTES.spectator.join}
-            className="inline-flex h-12 items-center justify-center rounded-md border border-input bg-background px-8 text-sm font-medium text-foreground shadow-sm transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-          >
-            Join as Spectator
-          </Link>
         </div>
       </div>
     </div>

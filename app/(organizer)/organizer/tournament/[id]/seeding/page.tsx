@@ -12,7 +12,7 @@ import { SeedingManager } from '@/components/tournaments/SeedingManager';
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const supabase = await createClient();
-  const { data } = await supabase.from('tournaments').select('name').eq('id', id).single();
+  const { data } = await supabase.from('tournaments').select('name').eq('id', id).single<{ name: string }>();
   return { title: data ? `Seeding – ${data.name} | Bracket App` : 'Seeding | Bracket App' };
 }
 

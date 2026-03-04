@@ -27,8 +27,10 @@ interface SeedEntry {
 export function ManualSeedingInterface({
   tournamentId,
   teams,
+  participantType,
   onComplete,
 }: ManualSeedingInterfaceProps) {
+  const labels = getParticipantLabels(participantType);
   const [entries, setEntries] = useState<SeedEntry[]>(
     teams.map((t) => ({
       teamId: t.id,

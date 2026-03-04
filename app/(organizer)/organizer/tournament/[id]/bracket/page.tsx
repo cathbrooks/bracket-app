@@ -14,7 +14,7 @@ import { generateBracket } from '@/lib/services/bracket/generateBracket';
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const supabase = await createClient();
-  const { data } = await supabase.from('tournaments').select('name').eq('id', id).single();
+  const { data } = await supabase.from('tournaments').select('name').eq('id', id).single<{ name: string }>();
   return { title: data ? `Bracket – ${data.name} | Bracket App` : 'Bracket | Bracket App' };
 }
 
@@ -38,23 +38,22 @@ export default async function BracketPage({
 
   const t = toTournament(tournament as unknown as Tables<'tournaments'>);
 
-  const { data: teamRows } = await supabase
-    .from('teams')
-    .select('*')
-    .eq('tournament_id', id)
-    .order('seed', { ascending: true, nullsFirst: false })
-    .order('created_at', { ascending: true });
+  const [{ data: teamRows }, { data: matchRows }] = await Promise.all([
+    supabase
+      .from('teams')
+      .select('*')
+      .eq('tournament_id', id)
+      .order('seed', { ascending: true, nullsFirst: false })
+      .order('created_at', { ascending: true }),
+    supabase
+      .from('matches')
+      .select('*')
+      .eq('tournament_id', id)
+      .order('round', { ascending: true })
+      .order('match_number', { ascending: true }),
+  ]);
 
   const teams = ((teamRows ?? []) as unknown as Tables<'teams'>[]).map(toTeam);
-
-  // Check for existing matches
-  const { data: matchRows } = await supabase
-    .from('matches')
-    .select('*')
-    .eq('tournament_id', id)
-    .order('round', { ascending: true })
-    .order('match_number', { ascending: true });
-
   let matches = ((matchRows ?? []) as unknown as Tables<'matches'>[]).map(toMatch);
 
   const labels = getParticipantLabels(t.participantType ?? 'teams');

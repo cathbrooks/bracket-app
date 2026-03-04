@@ -1,13 +1,16 @@
 'use client';
 
-import { use, useState, useEffect } from 'react';
+import { use } from 'react';
 import { BracketView } from '@/components/bracket/BracketView';
 import { BracketPredictionForm } from '@/components/predictions/BracketPredictionForm';
 import { PredictionLeaderboard } from '@/components/predictions/PredictionLeaderboard';
+import { SubmittedPredictions } from '@/components/predictions/SubmittedPredictions';
 import { CelebrationScreen } from '@/components/predictions/CelebrationScreen';
 import { useBracketData } from '@/hooks/useBracketData';
 import { ConnectionStatus } from '@/components/ConnectionStatus';
+import { PredictionDataProvider, usePredictionData } from '@/contexts/PredictionDataContext';
 import { Loader2 } from 'lucide-react';
+import type { Tournament, Match, Team } from '@/lib/types/tournament.types';
 
 function getSessionId(): string {
   if (typeof window === 'undefined') return '';
@@ -19,79 +22,25 @@ function getSessionId(): string {
   return id;
 }
 
-export default function SpectatorBracketPage({
-  params,
-}: {
-  params: Promise<{ joinCode: string }>;
-}) {
-  const { joinCode } = use(params);
-  const [hasSubmittedPredictions, setHasSubmittedPredictions] = useState(false);
-  const [predictionWinner, setPredictionWinner] = useState<{
-    displayName: string;
-    totalPoints: number;
-    correctCount: number;
-  } | null>(null);
+interface SpectatorContentProps {
+  tournament: Tournament;
+  matches: Match[];
+  teams: Team[];
+  connectionState: string;
+}
 
-  const { tournament, matches, teams, isLoading, error, connectionState } =
-    useBracketData({ joinCode });
+function SpectatorContent({ tournament, matches, teams, connectionState }: SpectatorContentProps) {
+  const { leaderboard, refetch } = usePredictionData();
+  const sessionId = getSessionId();
 
-  useEffect(() => {
-    if (!tournament?.id || hasSubmittedPredictions) return;
-    async function checkSubmission() {
-      try {
-        const res = await fetch(`/api/tournaments/${tournament.id}/predictions/leaderboard`);
-        if (!res.ok) return;
-        const json = await res.json();
-        const entries = json.data?.leaderboard ?? [];
-        const sessionId = getSessionId();
-        const submitted = entries.some((e: { sessionId: string }) => e.sessionId === sessionId);
-        if (submitted) setHasSubmittedPredictions(true);
-      } catch { /* ignore */ }
-    }
-    checkSubmission();
-  }, [tournament?.id, hasSubmittedPredictions]);
+  const hasSubmittedPredictions = leaderboard.some((e) => e.sessionId === sessionId);
 
-  useEffect(() => {
-    if (!tournament?.id || tournament.state !== 'completed') return;
-    async function fetchPredictionWinner() {
-      try {
-        const res = await fetch(`/api/tournaments/${tournament.id}/predictions/leaderboard`);
-        if (!res.ok) return;
-        const json = await res.json();
-        const entries = json.data?.leaderboard ?? [];
-        const top = entries[0];
-        if (top) {
-          setPredictionWinner({
-            displayName: top.displayName,
-            totalPoints: top.totalPoints,
-            correctCount: top.correctCount,
-          });
-        }
-      } catch { /* ignore */ }
-    }
-    fetchPredictionWinner();
-  }, [tournament?.id, tournament?.state]);
-
-  if (isLoading) {
-    return (
-      <div className="flex min-h-[60vh] items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-      </div>
-    );
-  }
-
-  if (error || !tournament) {
-    return (
-      <div className="container py-8">
-        <div className="mx-auto max-w-md rounded-md bg-destructive/10 p-6 text-center">
-          <h2 className="text-lg font-semibold text-destructive">Tournament Not Found</h2>
-          <p className="mt-2 text-sm text-destructive/80">
-            {error ?? 'The join code is invalid or the tournament does not exist.'}
-          </p>
-        </div>
-      </div>
-    );
-  }
+  const predictionWinner = (() => {
+    if (tournament.state !== 'completed') return null;
+    const top = leaderboard[0];
+    if (!top) return null;
+    return { displayName: top.displayName, totalPoints: top.totalPoints, correctCount: top.correctCount };
+  })();
 
   const hasStarted = matches.some((m) => !m.isBye && m.state === 'completed');
   const showPredictionForm = !hasStarted && !hasSubmittedPredictions;
@@ -124,7 +73,7 @@ export default function SpectatorBracketPage({
         </div>
       ) : null}
 
-      <div className="grid gap-6 lg:grid-cols-[1fr_320px]">
+      <div className="grid gap-6 lg:grid-cols-[1fr_320px] lg:items-start">
         <div>
           <BracketView
             tournament={tournament}
@@ -139,15 +88,63 @@ export default function SpectatorBracketPage({
               tournament={tournament}
               matches={matches}
               teams={teams}
-              onSubmitted={() => setHasSubmittedPredictions(true)}
+              onSubmitted={refetch}
             />
           )}
-          <PredictionLeaderboard
-            tournamentId={tournament.id}
-            currentSessionId={getSessionId()}
-          />
+          {hasSubmittedPredictions && (
+            <SubmittedPredictions
+              tournament={tournament}
+              matches={matches}
+              teams={teams}
+              sessionId={sessionId}
+            />
+          )}
+          <PredictionLeaderboard currentSessionId={sessionId} />
         </div>
       </div>
     </div>
+  );
+}
+
+export default function SpectatorBracketPage({
+  params,
+}: {
+  params: Promise<{ joinCode: string }>;
+}) {
+  const { joinCode } = use(params);
+
+  const { tournament, matches, teams, isLoading, error, connectionState } =
+    useBracketData({ joinCode });
+
+  if (isLoading) {
+    return (
+      <div className="flex min-h-[60vh] items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
+
+  if (error || !tournament) {
+    return (
+      <div className="container py-8">
+        <div className="mx-auto max-w-md rounded-md bg-destructive/10 p-6 text-center">
+          <h2 className="text-lg font-semibold text-destructive">Tournament Not Found</h2>
+          <p className="mt-2 text-sm text-destructive/80">
+            {error ?? 'The join code is invalid or the tournament does not exist.'}
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <PredictionDataProvider tournamentId={tournament.id}>
+      <SpectatorContent
+        tournament={tournament}
+        matches={matches}
+        teams={teams}
+        connectionState={connectionState}
+      />
+    </PredictionDataProvider>
   );
 }

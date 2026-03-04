@@ -62,16 +62,21 @@ export async function generateLeaderboard(
     };
   });
 
-  for (const entry of leaderboard) {
-    const { error: updateError } = await supabase
-      .from('teams')
-      .update({ seed: entry.seed } as never)
-      .eq('id', entry.teamId)
-      .eq('tournament_id', tournamentId);
+  // Update all seeds in parallel instead of sequentially
+  const updateResults = await Promise.all(
+    leaderboard.map((entry) =>
+      supabase
+        .from('teams')
+        .update({ seed: entry.seed } as never)
+        .eq('id', entry.teamId)
+        .eq('tournament_id', tournamentId)
+    )
+  );
 
-    if (updateError) {
+  for (let i = 0; i < updateResults.length; i++) {
+    if (updateResults[i].error) {
       throw new ValidationError(
-        `Failed to update seed for team ${entry.name}: ${updateError.message}`
+        `Failed to update seed for team ${leaderboard[i].name}: ${updateResults[i].error!.message}`
       );
     }
   }

@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { FormItem, FormLabel } from '@/components/ui/form';
 import { Badge } from '@/components/ui/badge';
-import { Wand2 } from 'lucide-react';
+import { Wand2, Check, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import {
   groupByRound,
@@ -27,7 +27,7 @@ interface BracketPredictionFormProps {
   onSubmitted: () => void;
 }
 
-interface PredictionState {
+export interface PredictionState {
   picks: Record<string, string>;
   /** matchIds that were filled in by cascade (not by an explicit user click) */
   autofilled: Set<string>;
@@ -194,45 +194,10 @@ export function BracketPredictionForm({
   const isComplete = filledCount === totalRequired;
 
   function handlePick(matchId: string, teamId: string) {
-    setPredState((prev) => {
-      const newPicks = { ...prev.picks, [matchId]: teamId };
-      const newAutofilled = new Set(prev.autofilled);
-      newAutofilled.delete(matchId); // this is now an explicit pick
-
-      // Cascade winner forward through winnerNextMatchId chain.
-      // Stop only when the next match already has an EXPLICIT pick.
-      // If it has an autofill from the other feeder, don't overwrite that side.
-      let currentId: string | null | undefined = matchId;
-
-      while (currentId) {
-        const match = matchMap.get(currentId);
-        if (!match?.winnerNextMatchId) break;
-
-        const nextId = match.winnerNextMatchId;
-        const existingPick = newPicks[nextId];
-
-        if (existingPick) {
-          const wasAutofilled = prev.autofilled.has(nextId);
-          if (!wasAutofilled) break; // explicit pick — respect it
-
-          // Autofilled — check if the other feeder is responsible for it
-          const feeders = feederMap.get(nextId) ?? [];
-          const myIdx = feeders.indexOf(currentId);
-          const otherFeederId = myIdx === 0 ? feeders[1] : feeders[0];
-          const otherFeederPick = otherFeederId ? newPicks[otherFeederId] : undefined;
-          if (otherFeederPick && existingPick === otherFeederPick) break;
-        }
-
-        const winnerId = newPicks[currentId];
-        if (winnerId) {
-          newPicks[nextId] = winnerId;
-          newAutofilled.add(nextId);
-        }
-        currentId = nextId;
-      }
-
-      return { picks: newPicks, autofilled: newAutofilled };
-    });
+    setPredState((prev) => ({
+      picks: { ...prev.picks, [matchId]: teamId },
+      autofilled: prev.autofilled,
+    }));
   }
 
   async function handleSubmit() {
@@ -272,7 +237,7 @@ export function BracketPredictionForm({
       <div className="space-y-1">
         <h2 className="text-base font-semibold">Bracket Predictions</h2>
         <p className="text-xs text-muted-foreground">
-          Pick the winner for every match. Picks cascade forward automatically.
+          Pick the winner for every match.
         </p>
       </div>
 
@@ -365,22 +330,25 @@ export function BracketPredictionForm({
 
 // ── Shared section props ──────────────────────────────────────────────
 
-interface SectionProps {
+export interface SectionProps {
   predState: PredictionState;
   predictedParticipants: Map<string, { teamAId: string | null; teamBId: string | null }>;
   teamMap: Map<string, Team>;
-  onPick: (matchId: string, teamId: string) => void;
+  onPick?: (matchId: string, teamId: string) => void;
+  /** Per-match correctness for the read-only submitted view */
+  matchMeta?: Map<string, { isCorrect: boolean | null }>;
 }
 
 // ── Desktop: tree view with connectors (mirrors BracketSection) ───────
 
-function PredictionBracketSection({
+export function PredictionBracketSection({
   rounds,
   allMatchesInSection,
   predState,
   predictedParticipants,
   teamMap,
   onPick,
+  matchMeta,
 }: SectionProps & {
   rounds: ReturnType<typeof groupByRound>;
   allMatchesInSection: Match[];
@@ -391,7 +359,7 @@ function PredictionBracketSection({
   const totalHeight = firstRoundCount * (MATCH_HEIGHT + 16) - 16;
 
   return (
-    <div className="overflow-x-auto pb-4">
+    <div className="overflow-x-auto overflow-y-clip pt-7 pb-4">
       <div className="relative" style={{ width: totalWidth, minHeight: totalHeight }}>
         <BracketConnectors matches={allMatchesInSection} positions={positions} />
 
@@ -421,6 +389,7 @@ function PredictionBracketSection({
                     teamB={teamB ?? null}
                     picked={predState.picks[match.id]}
                     isAuto={predState.autofilled.has(match.id)}
+                    isCorrect={matchMeta?.get(match.id)?.isCorrect}
                     onPick={onPick}
                   />
                 </div>
@@ -435,12 +404,13 @@ function PredictionBracketSection({
 
 // ── Mobile: list view (mirrors RoundsList) ────────────────────────────
 
-function PredictionRoundsList({
+export function PredictionRoundsList({
   rounds,
   predState,
   predictedParticipants,
   teamMap,
   onPick,
+  matchMeta,
 }: SectionProps & { rounds: ReturnType<typeof groupByRound> }) {
   return (
     <div className="space-y-4">
@@ -462,6 +432,7 @@ function PredictionRoundsList({
                   teamB={teamB ?? null}
                   picked={predState.picks[match.id]}
                   isAuto={predState.autofilled.has(match.id)}
+                  isCorrect={matchMeta?.get(match.id)?.isCorrect}
                   onPick={onPick}
                 />
               );
@@ -481,6 +452,7 @@ function PredictionMatchCard({
   teamB,
   picked,
   isAuto,
+  isCorrect,
   onPick,
 }: {
   match: Match;
@@ -488,12 +460,14 @@ function PredictionMatchCard({
   teamB: Team | null;
   picked: string | undefined;
   isAuto: boolean;
-  onPick: (matchId: string, teamId: string) => void;
+  isCorrect?: boolean | null;
+  onPick?: (matchId: string, teamId: string) => void;
 }) {
   const isBye = match.isBye;
   const pickedA = picked === teamA?.id;
   const pickedB = picked === teamB?.id;
   const hasPick = !!picked;
+  const readonly = !onPick;
 
   return (
     <div
@@ -501,9 +475,13 @@ function PredictionMatchCard({
         'rounded-lg border transition-shadow bg-card',
         isBye
           ? 'bg-muted/30 border-dashed border-border'
-          : hasPick
-            ? 'border-border'
-            : 'border-dashed border-border/60',
+          : isCorrect === true
+            ? 'border-green-500/40 bg-green-500/5'
+            : isCorrect === false
+              ? 'border-red-500/40 bg-red-500/5'
+              : hasPick
+                ? 'border-border'
+                : 'border-dashed border-border/60',
         'p-2'
       )}
     >
@@ -522,6 +500,15 @@ function PredictionMatchCard({
               auto
             </span>
           )}
+          {isCorrect != null && (
+            <span className={cn(
+              'flex items-center gap-0.5 text-[10px]',
+              isCorrect ? 'text-green-600 dark:text-green-400' : 'text-red-500 dark:text-red-400',
+            )}>
+              {isCorrect ? <Check className="h-3 w-3" /> : <X className="h-3 w-3" />}
+              {isCorrect ? 'Correct' : 'Wrong'}
+            </span>
+          )}
         </div>
       </div>
 
@@ -529,22 +516,24 @@ function PredictionMatchCard({
       <div className="space-y-0.5">
         <PredictionTeamRow
           team={teamA}
-          isPicked={pickedA}
+          isPicked={!isBye && pickedA}
           isLoser={!isBye && hasPick && !pickedA}
           isAuto={isAuto && pickedA}
           isByeWinner={isBye && match.winnerTeamId === teamA?.id}
-          disabled={isBye || !teamA}
-          onClick={() => !isBye && teamA && onPick(match.id, teamA.id)}
+          isBye={isBye}
+          disabled={isBye || !teamA || readonly}
+          onClick={() => !isBye && teamA && onPick?.(match.id, teamA.id)}
         />
         <div className="border-t border-border/50" />
         <PredictionTeamRow
           team={teamB}
-          isPicked={pickedB}
+          isPicked={!isBye && pickedB}
           isLoser={!isBye && hasPick && !pickedB}
           isAuto={isAuto && pickedB}
           isByeWinner={isBye && match.winnerTeamId === teamB?.id}
-          disabled={isBye || !teamB}
-          onClick={() => !isBye && teamB && onPick(match.id, teamB.id)}
+          isBye={isBye}
+          disabled={isBye || !teamB || readonly}
+          onClick={() => !isBye && teamB && onPick?.(match.id, teamB.id)}
         />
       </div>
     </div>
@@ -559,6 +548,7 @@ function PredictionTeamRow({
   isLoser,
   isAuto,
   isByeWinner,
+  isBye,
   disabled,
   onClick,
 }: {
@@ -567,9 +557,12 @@ function PredictionTeamRow({
   isLoser: boolean;
   isAuto: boolean;
   isByeWinner: boolean;
+  isBye: boolean;
   disabled: boolean;
   onClick: () => void;
 }) {
+  const label = team?.name ?? (isBye ? 'bye' : 'TBD');
+
   return (
     <button
       type="button"
@@ -589,8 +582,8 @@ function PredictionTeamRow({
       {team?.seed != null && (
         <span className="w-4 shrink-0 text-[10px] text-muted-foreground">{team.seed}</span>
       )}
-      <span className="flex-1 truncate text-xs">{team?.name ?? 'TBD'}</span>
-      {isPicked && (
+      <span className="flex-1 truncate text-xs">{label}</span>
+      {isPicked && team && (
         <span className="shrink-0 text-xs font-bold text-green-600 dark:text-green-400">W</span>
       )}
     </button>

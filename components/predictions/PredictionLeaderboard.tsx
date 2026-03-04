@@ -1,21 +1,12 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Trophy, Info } from 'lucide-react';
-
-interface LeaderboardEntry {
-  rank: number;
-  displayName: string;
-  totalPoints: number;
-  correctCount: number;
-  accuracy: number;
-  sessionId: string;
-}
+import { usePredictionData } from '@/contexts/PredictionDataContext';
 
 interface PredictionLeaderboardProps {
-  tournamentId: string;
   currentSessionId?: string;
 }
 
@@ -31,30 +22,13 @@ const RANK_ICONS: Record<number, string> = {
   3: '🥉',
 };
 
-export function PredictionLeaderboard({ tournamentId, currentSessionId }: PredictionLeaderboardProps) {
-  const [entries, setEntries] = useState<LeaderboardEntry[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+export function PredictionLeaderboard({ currentSessionId }: PredictionLeaderboardProps) {
+  const { leaderboard, isLoading } = usePredictionData();
   const [showPointsKey, setShowPointsKey] = useState(false);
-
-  useEffect(() => {
-    async function fetchLeaderboard() {
-      try {
-        const res = await fetch(`/api/tournaments/${tournamentId}/predictions/leaderboard`);
-        if (!res.ok) return;
-        const json = await res.json();
-        setEntries(json.data?.leaderboard ?? []);
-      } catch { /* silently fail */ }
-      finally { setIsLoading(false); }
-    }
-
-    fetchLeaderboard();
-    const interval = setInterval(fetchLeaderboard, 15000);
-    return () => clearInterval(interval);
-  }, [tournamentId]);
 
   if (isLoading) return null;
 
-  if (entries.length === 0) {
+  if (leaderboard.length === 0) {
     return (
       <Card>
         <CardContent className="py-6 text-center text-sm text-muted-foreground">
@@ -64,7 +38,7 @@ export function PredictionLeaderboard({ tournamentId, currentSessionId }: Predic
     );
   }
 
-  const hasPoints = entries.some((e) => e.totalPoints > 0);
+  const hasPoints = leaderboard.some((e) => e.totalPoints > 0);
 
   return (
     <Card>
@@ -100,7 +74,6 @@ export function PredictionLeaderboard({ tournamentId, currentSessionId }: Predic
       </CardHeader>
 
       <CardContent className="pt-0">
-        {/* Column headers */}
         <div className="grid grid-cols-[2rem_1fr_4.5rem_3.5rem] gap-2 border-b pb-2 text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
           <span>#</span>
           <span>Name</span>
@@ -108,9 +81,8 @@ export function PredictionLeaderboard({ tournamentId, currentSessionId }: Predic
           <span className="text-right">Correct</span>
         </div>
 
-        {/* Rows */}
         <div className="mt-1 space-y-0.5">
-          {entries.map((entry) => {
+          {leaderboard.map((entry) => {
             const isCurrentUser = entry.sessionId === currentSessionId;
             const isTop3 = entry.rank <= 3;
 
@@ -123,12 +95,10 @@ export function PredictionLeaderboard({ tournamentId, currentSessionId }: Predic
                     : ''
                 }`}
               >
-                {/* Rank */}
                 <span className={`text-xs font-bold tabular-nums ${RANK_STYLES[entry.rank] ?? 'text-muted-foreground'}`}>
                   {RANK_ICONS[entry.rank] ?? `#${entry.rank}`}
                 </span>
 
-                {/* Name */}
                 <span className="flex items-center gap-1.5 truncate">
                   <span className={`truncate ${isTop3 ? 'font-semibold' : 'font-medium'}`}>
                     {entry.displayName}
@@ -138,7 +108,6 @@ export function PredictionLeaderboard({ tournamentId, currentSessionId }: Predic
                   )}
                 </span>
 
-                {/* Points */}
                 <span className={`text-right tabular-nums font-bold ${
                   hasPoints && entry.rank === 1
                     ? 'text-yellow-600 dark:text-yellow-400'
@@ -148,7 +117,6 @@ export function PredictionLeaderboard({ tournamentId, currentSessionId }: Predic
                   <span className="ml-0.5 text-[10px] font-normal text-muted-foreground">pts</span>
                 </span>
 
-                {/* Correct / accuracy */}
                 <span className="text-right tabular-nums text-xs text-muted-foreground">
                   {entry.correctCount}
                   {entry.accuracy > 0 && (
@@ -160,7 +128,6 @@ export function PredictionLeaderboard({ tournamentId, currentSessionId }: Predic
           })}
         </div>
 
-        {/* Footer note */}
         {!hasPoints && (
           <p className="mt-3 text-center text-[11px] text-muted-foreground">
             Points update as matches are completed.

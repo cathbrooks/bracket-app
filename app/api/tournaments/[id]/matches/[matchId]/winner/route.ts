@@ -54,7 +54,8 @@ export const POST = withErrorHandler(async (
   }
 
   // Advance winner via RPC
-  const { error: rpcError } = await supabase.rpc('advance_match_winner', {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { error: rpcError } = await (supabase.rpc as any)('advance_match_winner', {
     p_match_id: matchId,
     p_winner_team_id: winnerId,
   });
@@ -71,20 +72,33 @@ export const POST = withErrorHandler(async (
     let currentByeId: string | null = match.loserNextMatchId;
     const loserId = winnerId === match.teamAId ? match.teamBId : match.teamAId;
 
+    interface LbMatchRow {
+      id: string;
+      is_bye: boolean;
+      state: string;
+      team_a_id: string | null;
+      team_b_id: string | null;
+      winner_next_match_id: string | null;
+    }
+
+    interface NextMatchRow {
+      id: string;
+      team_a_id: string | null;
+      team_b_id: string | null;
+    }
+
     while (currentByeId && loserId) {
-      const { data: lbRow } = await supabase
+      const { data: lbRow }: { data: LbMatchRow | null } = await supabase
         .from('matches')
         .select('id, is_bye, state, team_a_id, team_b_id, winner_next_match_id')
         .eq('id', currentByeId)
-        .single();
+        .single<LbMatchRow>();
 
       if (!lbRow || !lbRow.is_bye || lbRow.state === 'completed') break;
 
-      // Determine which slot the loser occupies (RPC may have placed it already)
       const occupiedBy = lbRow.team_a_id ?? lbRow.team_b_id;
       const resolvedLoser = occupiedBy ?? loserId;
 
-      // Complete the bye match
       await supabase
         .from('matches')
         .update({
@@ -96,13 +110,12 @@ export const POST = withErrorHandler(async (
         } as never)
         .eq('id', lbRow.id);
 
-      // Place the survivor into the next LB match (team_a_id first, then team_b_id)
       if (lbRow.winner_next_match_id) {
         const { data: nextRow } = await supabase
           .from('matches')
           .select('id, team_a_id, team_b_id')
           .eq('id', lbRow.winner_next_match_id)
-          .single();
+          .single<NextMatchRow>();
 
         if (nextRow) {
           if (!nextRow.team_a_id) {
@@ -119,7 +132,6 @@ export const POST = withErrorHandler(async (
         }
       }
 
-      // Check if the next match is also a bye (chain of byes)
       currentByeId = lbRow.winner_next_match_id ?? null;
     }
   }

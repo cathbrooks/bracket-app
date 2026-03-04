@@ -39,7 +39,6 @@ export function SpectatorMatchCard({
         {showPredictions && !match.isBye && teamA && teamB && (
           <AggregatePredictionCounts
             matchId={match.id}
-            tournamentId={tournamentId}
             teamA={teamA}
             teamB={teamB}
           />

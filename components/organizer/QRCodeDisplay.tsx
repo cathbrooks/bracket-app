@@ -22,7 +22,9 @@ export function QRCodeDisplay({ joinCode, tournamentName }: QRCodeDisplayProps) 
     setOrigin(window.location.origin);
   }, []);
 
-  const spectatorUrl = `${origin}/spectator/view/${joinCode}`;
+  // Base URL for spectators — they must enter the join code on the entry page.
+  // QR code and shared link point here so code is always required.
+  const spectatorEntryUrl = `${origin}/spectator/view`;
 
   const handleDownload = useCallback(() => {
     const svg = svgRef.current?.querySelector('svg');
@@ -53,7 +55,7 @@ export function QRCodeDisplay({ joinCode, tournamentName }: QRCodeDisplayProps) 
           <h2>${tournamentName}</h2>
           <p>Join Code: ${joinCode}</p>
           ${svg.outerHTML}
-          <p style="margin-top:16px;color:#666">Scan to view the bracket</p>
+          <p style="margin-top:16px;color:#666">Scan and enter code to view the bracket</p>
         </div>
       </body></html>
     `);
@@ -63,7 +65,7 @@ export function QRCodeDisplay({ joinCode, tournamentName }: QRCodeDisplayProps) 
 
   async function handleCopy() {
     try {
-      await navigator.clipboard.writeText(spectatorUrl);
+      await navigator.clipboard.writeText(spectatorEntryUrl);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch { /* clipboard not available */ }
@@ -77,7 +79,7 @@ export function QRCodeDisplay({ joinCode, tournamentName }: QRCodeDisplayProps) 
       <CardContent className="space-y-4">
         <div className="flex justify-center" ref={svgRef}>
           <QRCodeSVG
-            value={spectatorUrl}
+            value={spectatorEntryUrl}
             size={200}
             level="M"
             includeMargin
@@ -89,8 +91,11 @@ export function QRCodeDisplay({ joinCode, tournamentName }: QRCodeDisplayProps) 
           <p className="text-2xl font-bold tracking-widest">{joinCode}</p>
         </div>
 
+        <p className="text-xs text-muted-foreground">
+          Spectators visit this URL and enter the join code above.
+        </p>
         <div className="flex items-center gap-2">
-          <Input value={spectatorUrl} readOnly className="text-xs" />
+          <Input value={spectatorEntryUrl} readOnly className="text-xs" />
           <Button variant="outline" size="icon" onClick={handleCopy}>
             {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
           </Button>

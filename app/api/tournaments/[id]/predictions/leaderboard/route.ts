@@ -24,23 +24,25 @@ export const GET = withErrorHandler(async (
 
   // Fetch all completed non-bye matches so we can compute scores on the fly.
   // Points double each round: round 1 = 1pt, round 2 = 2pts, round 3 = 4pts, etc.
+  // Exclude bye matches — they are not predictable; accuracy % uses only playable matches.
   const { data: completedMatches } = await supabase
     .from('matches')
-    .select('id, round, winner_team_id')
+    .select('id, round, winner_team_id, is_bye')
     .eq('tournament_id', id)
-    .eq('is_bye', false)
     .eq('state', 'completed')
     .not('winner_team_id', 'is', null);
 
   const matchResults = new Map<string, { winnerId: string; points: number }>();
   for (const m of completedMatches ?? []) {
-    const row = m as { id: string; round: number; winner_team_id: string };
+    const row = m as { id: string; round: number; winner_team_id: string; is_bye: boolean };
+    if (row.is_bye) continue; // exclude bye matches from scoring and accuracy percentage
     matchResults.set(row.id, {
       winnerId: row.winner_team_id,
       points: Math.pow(2, row.round - 1),
     });
   }
 
+  // Denominator for accuracy: only non-bye completed matches (playable matches that were actually played)
   const totalPlayableMatches = matchResults.size;
 
   // Fetch all predictions

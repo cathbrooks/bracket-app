@@ -8,7 +8,7 @@ import {
   groupByBracketCategory,
   calculateMatchPositions,
   MATCH_WIDTH,
-  MATCH_HEIGHT,
+  SPECTATOR_MATCH_HEIGHT,
   ROUND_GAP,
 } from '@/lib/utils/bracket-layout';
 import type { Match, Team, Tournament } from '@/lib/types/tournament.types';
@@ -82,14 +82,14 @@ function BracketSection({
   onMatchClick?: (match: Match) => void;
   matches: Match[];
 }) {
-  const positions = useMemo(() => calculateMatchPositions(rounds), [rounds]);
+  const positions = useMemo(() => calculateMatchPositions(rounds, SPECTATOR_MATCH_HEIGHT), [rounds]);
 
   const totalWidth = rounds.length * (MATCH_WIDTH + ROUND_GAP) - ROUND_GAP;
   const firstRoundCount = rounds[0]?.matches.length ?? 1;
-  const totalHeight = firstRoundCount * (MATCH_HEIGHT + 16) - 16;
+  const totalHeight = firstRoundCount * (SPECTATOR_MATCH_HEIGHT + 16) - 16;
 
   return (
-    <div className="overflow-x-auto pb-4">
+    <div className="overflow-x-auto overflow-y-clip pt-7 pb-4">
       <div className="relative" style={{ width: totalWidth, minHeight: totalHeight }}>
         <BracketConnectors matches={matches} positions={positions} />
 

@@ -79,11 +79,13 @@ export interface MatchPosition {
 
 const MATCH_WIDTH = 220;
 const MATCH_HEIGHT = 72;
+const SPECTATOR_MATCH_HEIGHT = 140;
 const ROUND_GAP = 60;
 const MATCH_VERTICAL_GAP = 16;
 
 export function calculateMatchPositions(
-  rounds: RoundGroup[]
+  rounds: RoundGroup[],
+  matchHeight: number = MATCH_HEIGHT,
 ): Map<string, MatchPosition> {
   const positions = new Map<string, MatchPosition>();
 
@@ -92,17 +94,17 @@ export function calculateMatchPositions(
     const x = roundIdx * (MATCH_WIDTH + ROUND_GAP);
 
     const firstRoundCount = rounds[0]?.matches.length ?? 1;
-    const totalHeight = firstRoundCount * (MATCH_HEIGHT + MATCH_VERTICAL_GAP) - MATCH_VERTICAL_GAP;
+    const totalHeight = firstRoundCount * (matchHeight + MATCH_VERTICAL_GAP) - MATCH_VERTICAL_GAP;
     const spacing = totalHeight / Math.max(round.matches.length, 1);
 
     for (let matchIdx = 0; matchIdx < round.matches.length; matchIdx++) {
       const match = round.matches[matchIdx];
-      const y = spacing * matchIdx + (spacing - MATCH_HEIGHT) / 2;
-      positions.set(match.id, { x, y, width: MATCH_WIDTH, height: MATCH_HEIGHT });
+      const y = spacing * matchIdx + (spacing - matchHeight) / 2;
+      positions.set(match.id, { x, y, width: MATCH_WIDTH, height: matchHeight });
     }
   }
 
   return positions;
 }
 
-export { MATCH_WIDTH, MATCH_HEIGHT, ROUND_GAP };
+export { MATCH_WIDTH, MATCH_HEIGHT, SPECTATOR_MATCH_HEIGHT, ROUND_GAP };
