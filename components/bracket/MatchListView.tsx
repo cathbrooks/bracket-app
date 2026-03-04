@@ -10,9 +10,10 @@ interface MatchListViewProps {
   matches: Match[];
   teams: Team[];
   onMatchClick?: (match: Match) => void;
+  showPredictions?: boolean;
 }
 
-export function MatchListView({ tournament, matches, teams, onMatchClick }: MatchListViewProps) {
+export function MatchListView({ tournament, matches, teams, onMatchClick, showPredictions }: MatchListViewProps) {
   const teamMap = useMemo(
     () => new Map(teams.map((t) => [t.id, t])),
     [teams]
@@ -37,14 +38,14 @@ export function MatchListView({ tournament, matches, teams, onMatchClick }: Matc
             <h3 className="mb-3 text-sm font-semibold text-muted-foreground uppercase tracking-wider">
               {cat.label}
             </h3>
-            <RoundsList tournamentId={tournament.id} rounds={cat.rounds} teamMap={teamMap} onMatchClick={onMatchClick} />
+            <RoundsList tournamentId={tournament.id} rounds={cat.rounds} teamMap={teamMap} onMatchClick={onMatchClick} showPredictions={showPredictions} />
           </div>
         ))}
       </div>
     );
   }
 
-  return <RoundsList tournamentId={tournament.id} rounds={singleRounds} teamMap={teamMap} onMatchClick={onMatchClick} />;
+  return <RoundsList tournamentId={tournament.id} rounds={singleRounds} teamMap={teamMap} onMatchClick={onMatchClick} showPredictions={showPredictions} />;
 }
 
 function RoundsList({
@@ -52,11 +53,13 @@ function RoundsList({
   rounds,
   teamMap,
   onMatchClick,
+  showPredictions,
 }: {
   tournamentId: string;
   rounds: ReturnType<typeof groupByRound>;
   teamMap: Map<string, Team>;
   onMatchClick?: (match: Match) => void;
+  showPredictions?: boolean;
 }) {
   return (
     <div className="space-y-4">
@@ -73,6 +76,7 @@ function RoundsList({
                 match={match}
                 teamA={match.teamAId ? teamMap.get(match.teamAId) : null}
                 teamB={match.teamBId ? teamMap.get(match.teamBId) : null}
+                showPredictions={showPredictions}
                 onClick={onMatchClick ? () => onMatchClick(match) : undefined}
               />
             ))}

@@ -13,6 +13,7 @@ interface WizardConfig {
   name: string;
   gameType: string;
   participantType: ParticipantType;
+  predictionsEnabled: boolean;
   format: TournamentFormat;
   grandFinalsReset: boolean;
   teamCount: number;
@@ -75,6 +76,7 @@ export function ReviewStep({ config, onEditStep }: ReviewStepProps) {
           <ReviewField label="Tournament Name" value={config.name} />
           <ReviewField label="Game" value={config.gameType} />
           <ReviewField label="Participant Type" value={labels.plural} />
+          <ReviewField label="Prediction Bracket" value={config.predictionsEnabled ? 'Enabled' : 'Disabled'} />
         </ReviewCard>
 
         <ReviewCard title="Format" onEdit={() => onEditStep(1)}>

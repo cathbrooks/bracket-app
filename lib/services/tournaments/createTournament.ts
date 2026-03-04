@@ -50,6 +50,7 @@ export async function createTournament(
     seeding_mode: params.seedingMode ?? 'manual',
     estimated_duration_minutes: estimatedDurationMinutes,
     roster_size: null,
+    predictions_enabled: params.predictionsEnabled ?? false,
     join_code: joinCode,
     state: 'draft',
     owner_id: userId,

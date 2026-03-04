@@ -22,6 +22,7 @@ export const basicInfoSchema = z.object({
   participantType: z.enum(PARTICIPANT_TYPES, {
     error: 'Please select teams or players',
   }),
+  predictionsEnabled: z.boolean().default(false),
 });
 
 export const formatSelectionSchema = z.object({

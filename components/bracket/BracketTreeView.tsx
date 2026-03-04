@@ -18,9 +18,10 @@ interface BracketTreeViewProps {
   matches: Match[];
   teams: Team[];
   onMatchClick?: (match: Match) => void;
+  showPredictions?: boolean;
 }
 
-export function BracketTreeView({ tournament, matches, teams, onMatchClick }: BracketTreeViewProps) {
+export function BracketTreeView({ tournament, matches, teams, onMatchClick, showPredictions }: BracketTreeViewProps) {
   const teamMap = useMemo(
     () => new Map(teams.map((t) => [t.id, t])),
     [teams]
@@ -51,6 +52,7 @@ export function BracketTreeView({ tournament, matches, teams, onMatchClick }: Br
               teamMap={teamMap}
               onMatchClick={onMatchClick}
               matches={cat.rounds.flatMap((r) => r.matches)}
+              showPredictions={showPredictions}
             />
           </div>
         ))}
@@ -65,6 +67,7 @@ export function BracketTreeView({ tournament, matches, teams, onMatchClick }: Br
       teamMap={teamMap}
       onMatchClick={onMatchClick}
       matches={matches}
+      showPredictions={showPredictions}
     />
   );
 }
@@ -75,12 +78,14 @@ function BracketSection({
   teamMap,
   onMatchClick,
   matches,
+  showPredictions,
 }: {
   tournamentId: string;
   rounds: ReturnType<typeof groupByRound>;
   teamMap: Map<string, Team>;
   onMatchClick?: (match: Match) => void;
   matches: Match[];
+  showPredictions?: boolean;
 }) {
   const positions = useMemo(() => calculateMatchPositions(rounds, SPECTATOR_MATCH_HEIGHT), [rounds]);
 
@@ -116,6 +121,7 @@ function BracketSection({
                     teamA={match.teamAId ? teamMap.get(match.teamAId) : null}
                     teamB={match.teamBId ? teamMap.get(match.teamBId) : null}
                     compact
+                    showPredictions={showPredictions}
                     onClick={onMatchClick ? () => onMatchClick(match) : undefined}
                   />
                 </div>

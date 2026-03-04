@@ -22,6 +22,7 @@ export type Database = {
           seeding_mode: 'manual' | 'time-trial';
           estimated_duration_minutes: number | null;
           roster_size: number | null;
+          predictions_enabled: boolean;
           join_code: string;
           state: 'draft' | 'registration' | 'seeding' | 'in-progress' | 'completed';
           owner_id: string;
@@ -40,6 +41,7 @@ export type Database = {
           seeding_mode?: 'manual' | 'time-trial';
           estimated_duration_minutes?: number | null;
           roster_size?: number | null;
+          predictions_enabled?: boolean;
           join_code: string;
           state?: 'draft' | 'registration' | 'seeding' | 'in-progress' | 'completed';
           owner_id: string;
@@ -58,6 +60,7 @@ export type Database = {
           seeding_mode?: 'manual' | 'time-trial';
           estimated_duration_minutes?: number | null;
           roster_size?: number | null;
+          predictions_enabled?: boolean;
           join_code?: string;
           state?: 'draft' | 'registration' | 'seeding' | 'in-progress' | 'completed';
           owner_id?: string;

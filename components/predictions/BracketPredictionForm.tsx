@@ -175,7 +175,7 @@ export function BracketPredictionForm({
     }
 
     return result;
-  }, [matches, playableMatches, predState.picks, feederMap]);
+  }, [matches, playableMatches, predState.picks, feederMap, matchMap]);
 
   const isDoubleElim = tournament.format === 'double-elimination';
 
@@ -190,14 +190,52 @@ export function BracketPredictionForm({
   );
 
   const totalRequired = playableMatches.length;
-  const filledCount = Object.keys(predState.picks).length;
-  const isComplete = filledCount === totalRequired;
+
+  /**
+   * Count only picks where the stored team ID is actually one of the
+   * predicted participants for that match. Stale picks (team no longer
+   * in the predicted path) don't count toward completion.
+   */
+  const validPickCount = useMemo(() => {
+    return playableMatches.filter((m) => {
+      const pick = predState.picks[m.id];
+      if (!pick) return false;
+      const pp = predictedParticipants.get(m.id);
+      return pp?.teamAId === pick || pp?.teamBId === pick;
+    }).length;
+  }, [playableMatches, predState.picks, predictedParticipants]);
+
+  const filledCount = validPickCount;
+  const isComplete = validPickCount === totalRequired;
 
   function handlePick(matchId: string, teamId: string) {
-    setPredState((prev) => ({
-      picks: { ...prev.picks, [matchId]: teamId },
-      autofilled: prev.autofilled,
-    }));
+    setPredState((prev) => {
+      const oldTeamId = prev.picks[matchId];
+      let newPicks = { ...prev.picks, [matchId]: teamId };
+
+      // When replacing an existing pick, cascade-clear any downstream picks
+      // that stored the old team's ID via the winner path. Those picks are
+      // now stale because the old team no longer propagates through this match.
+      if (oldTeamId && oldTeamId !== teamId) {
+        const queue: Array<{ nextMatchId: string; staleId: string }> = [];
+        const changed = matchMap.get(matchId);
+        if (changed?.winnerNextMatchId) {
+          queue.push({ nextMatchId: changed.winnerNextMatchId, staleId: oldTeamId });
+        }
+        while (queue.length > 0) {
+          const { nextMatchId, staleId } = queue.shift()!;
+          if (newPicks[nextMatchId] !== staleId) continue;
+          const { [nextMatchId]: _removed, ...rest } = newPicks;
+          newPicks = rest;
+          const next = matchMap.get(nextMatchId);
+          if (next?.winnerNextMatchId) {
+            queue.push({ nextMatchId: next.winnerNextMatchId, staleId });
+          }
+        }
+      }
+
+      return { picks: newPicks, autofilled: prev.autofilled };
+    });
   }
 
   async function handleSubmit() {
@@ -205,12 +243,24 @@ export function BracketPredictionForm({
     setIsSubmitting(true);
     setError(null);
     try {
+      // Safety net: only submit picks where the chosen team is actually a
+      // predicted participant in that match. This catches any stale picks
+      // that the cascade-clear in handlePick may not have reached (e.g.
+      // double-elim loser paths, or picks made out of round order).
+      const cleanPicks: Record<string, string> = {};
+      for (const [mid, tid] of Object.entries(predState.picks)) {
+        const pp = predictedParticipants.get(mid);
+        if (pp?.teamAId === tid || pp?.teamBId === tid) {
+          cleanPicks[mid] = tid;
+        }
+      }
+
       const res = await fetch(`/api/tournaments/${tournament.id}/predictions`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           displayName: displayName.trim() || undefined,
-          predictions: predState.picks,
+          predictions: cleanPicks,
           sessionId: getSessionId(),
         }),
       });

@@ -29,12 +29,16 @@ export const POST = withErrorHandler(async (
 
   const { data: tournament } = await supabase
     .from('tournaments')
-    .select('id, state')
+    .select('id, state, predictions_enabled')
     .eq('id', id)
     .single();
 
   if (!tournament) {
     throw new ValidationError('Tournament not found');
+  }
+
+  if (!tournament.predictions_enabled) {
+    throw new ValidationError('Predictions are not enabled for this tournament');
   }
 
   const { data: completedMatches } = await supabase
