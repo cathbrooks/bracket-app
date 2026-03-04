@@ -8,10 +8,9 @@ interface BracketViewProps {
   matches: Match[];
   teams: Team[];
   onMatchClick?: (match: Match) => void;
-  showPredictions?: boolean;
 }
 
-export function BracketView({ tournament, matches, teams, onMatchClick, showPredictions }: BracketViewProps) {
+export function BracketView({ tournament, matches, teams, onMatchClick }: BracketViewProps) {
   if (matches.length === 0) {
     return (
       <div className="flex min-h-[20vh] items-center justify-center text-muted-foreground">
@@ -26,7 +25,6 @@ export function BracketView({ tournament, matches, teams, onMatchClick, showPred
       matches={matches}
       teams={teams}
       onMatchClick={onMatchClick}
-      showPredictions={showPredictions}
     />
   );
 }

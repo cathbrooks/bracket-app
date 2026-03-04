@@ -30,7 +30,6 @@ export interface Tournament {
   seedingMode: SeedingMode;
   estimatedDurationMinutes: number | null;
   rosterSize: number | null;
-  predictionsEnabled: boolean;
   joinCode: string;
   state: TournamentState;
   ownerId: string;
@@ -106,7 +105,6 @@ export interface CreateTournamentInput {
   gameType: string;
   format: TournamentFormat;
   participantType?: ParticipantType;
-  predictionsEnabled?: boolean;
   teamCount: number;
   stationCount?: number;
   timePerMatchMinutes?: number;
@@ -193,7 +191,6 @@ export function toTournament(row: TournamentRow): Tournament {
     seedingMode: row.seeding_mode,
     estimatedDurationMinutes: row.estimated_duration_minutes,
     rosterSize: row.roster_size ?? null,
-    predictionsEnabled: row.predictions_enabled ?? false,
     joinCode: row.join_code,
     state: row.state,
     ownerId: row.owner_id,

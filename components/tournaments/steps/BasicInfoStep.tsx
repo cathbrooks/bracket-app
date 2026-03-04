@@ -12,7 +12,7 @@ import {
 } from '@/lib/constants';
 import { useEffect } from 'react';
 import { cn } from '@/lib/utils';
-import { Users, User, TrendingUp } from 'lucide-react';
+import { Users, User } from 'lucide-react';
 
 interface BasicInfoStepProps {
   values: BasicInfoFormData;
@@ -28,7 +28,7 @@ export function BasicInfoStep({ values, onChange, onValidChange }: BasicInfoStep
     formState: { errors, isValid },
   } = useForm<BasicInfoFormData>({
     resolver: zodResolver(basicInfoSchema),
-    defaultValues: { ...values, participantType: values.participantType ?? 'teams', predictionsEnabled: values.predictionsEnabled ?? false },
+    defaultValues: { ...values, participantType: values.participantType ?? 'teams' },
     mode: 'onChange',
   });
 
@@ -42,12 +42,11 @@ export function BasicInfoStep({ values, onChange, onValidChange }: BasicInfoStep
     if (
       watched.name !== values.name ||
       watched.gameType !== values.gameType ||
-      watched.participantType !== values.participantType ||
-      watched.predictionsEnabled !== values.predictionsEnabled
+      watched.participantType !== values.participantType
     ) {
       onChange(watched);
     }
-  }, [watched.name, watched.gameType, watched.participantType, watched.predictionsEnabled, onChange, values]);
+  }, [watched.name, watched.gameType, watched.participantType, onChange, values]);
 
   return (
     <div className="space-y-6">
@@ -124,44 +123,6 @@ export function BasicInfoStep({ values, onChange, onValidChange }: BasicInfoStep
             {watched.gameType?.length ?? 0}/{MAX_GAME_TYPE_LENGTH}
           </FormDescription>
         </div>
-      </FormItem>
-
-      <FormItem>
-        <FormLabel>Prediction Bracket</FormLabel>
-        <button
-          type="button"
-          onClick={() => setValue('predictionsEnabled', !watched.predictionsEnabled, { shouldValidate: true })}
-          className={cn(
-            'flex w-full items-center gap-3 rounded-lg border-2 p-4 text-left transition-all',
-            watched.predictionsEnabled
-              ? 'border-primary bg-primary/10 ring-1 ring-primary/20'
-              : 'border-border hover:border-primary/50'
-          )}
-        >
-          <div className={cn(
-            'flex h-10 w-10 shrink-0 items-center justify-center rounded-full',
-            watched.predictionsEnabled ? 'bg-primary/20' : 'bg-muted'
-          )}>
-            <TrendingUp className={cn('h-5 w-5', watched.predictionsEnabled ? 'text-primary' : 'text-muted-foreground')} />
-          </div>
-          <div className="flex-1">
-            <span className="font-medium">
-              {watched.predictionsEnabled ? 'Enabled' : 'Disabled'}
-            </span>
-            <p className="text-xs text-muted-foreground">
-              Allow spectators to predict match outcomes and compete on a leaderboard.
-            </p>
-          </div>
-          <div className={cn(
-            'h-5 w-9 shrink-0 rounded-full transition-colors',
-            watched.predictionsEnabled ? 'bg-primary' : 'bg-muted-foreground/30'
-          )}>
-            <div className={cn(
-              'h-5 w-5 rounded-full bg-white shadow transition-transform',
-              watched.predictionsEnabled ? 'translate-x-4' : 'translate-x-0'
-            )} />
-          </div>
-        </button>
       </FormItem>
     </div>
   );

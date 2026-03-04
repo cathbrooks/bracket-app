@@ -18,7 +18,6 @@ interface WizardConfig {
   name: string;
   gameType: string;
   participantType: ParticipantType;
-  predictionsEnabled: boolean;
   format: TournamentFormat;
   grandFinalsReset: boolean;
   teamCount: number;
@@ -37,7 +36,6 @@ const INITIAL_CONFIG: WizardConfig = {
   name: '',
   gameType: '',
   participantType: 'teams',
-  predictionsEnabled: false,
   format: 'single-elimination',
   grandFinalsReset: true,
   teamCount: 8,
@@ -96,7 +94,6 @@ export function TournamentSetupWizard() {
           name: config.name,
           gameType: config.gameType,
           participantType: config.participantType,
-          predictionsEnabled: config.predictionsEnabled,
           format: config.format,
           teamCount: config.teamCount,
           stationCount: config.stationCount,
@@ -140,7 +137,6 @@ export function TournamentSetupWizard() {
                 name: config.name,
                 gameType: config.gameType,
                 participantType: config.participantType,
-                predictionsEnabled: config.predictionsEnabled,
               }}
               onChange={(data) => setConfig((c) => ({ ...c, ...data }))}
               onValidChange={handleValidChange}

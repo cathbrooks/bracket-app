@@ -35,7 +35,6 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
     name: parsed.data.name,
     gameType: parsed.data.gameType,
     participantType: parsed.data.participantType,
-    predictionsEnabled: parsed.data.predictionsEnabled,
     format: parsed.data.format,
     teamCount: parsed.data.teamCount,
     stationCount: parsed.data.stationCount,
