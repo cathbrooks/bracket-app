@@ -51,20 +51,24 @@ export function MatchCard({ match, teamA, teamB, compact = false, onClick, child
 
       <div className={cn('mt-1 space-y-0.5', compact ? 'text-xs' : 'text-sm')}>
         <TeamRow
-          name={teamA?.name ?? (match.teamAId ? '...' : match.isBye ? 'bye' : 'TBD')}
+          name={teamA?.name ?? (match.teamAId ? '...' : 'TBD')}
           isWinner={isWinnerA}
           isLoser={!match.isBye && !isWinnerA && match.state === 'completed' && match.winnerTeamId !== null}
           seed={teamA?.seed}
           styles={styles}
         />
-        <div className="border-t border-border/50" />
-        <TeamRow
-          name={teamB?.name ?? (match.teamBId ? '...' : match.isBye ? 'bye' : 'TBD')}
-          isWinner={isWinnerB}
-          isLoser={!match.isBye && !isWinnerB && match.state === 'completed' && match.winnerTeamId !== null}
-          seed={teamB?.seed}
-          styles={styles}
-        />
+        {!match.isBye && (
+          <>
+            <div className="border-t border-border/50" />
+            <TeamRow
+              name={teamB?.name ?? (match.teamBId ? '...' : 'TBD')}
+              isWinner={isWinnerB}
+              isLoser={!match.isBye && !isWinnerB && match.state === 'completed' && match.winnerTeamId !== null}
+              seed={teamB?.seed}
+              styles={styles}
+            />
+          </>
+        )}
       </div>
 
       {children}
