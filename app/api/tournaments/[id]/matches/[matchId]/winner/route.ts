@@ -3,7 +3,7 @@ import { withErrorHandler } from '@/lib/errors/api-error-handler';
 import { ForbiddenError, UnauthorizedError, ValidationError } from '@/lib/errors/custom-errors';
 import { createClient } from '@/lib/supabase/server';
 import { validateTournamentOwnership } from '@/lib/validation/tournament.validation';
-import { scorePredictionsForMatch } from '@/lib/services/predictions/scorePredictions';
+import { scorePredictionsForMatch, unscoreMatch } from '@/lib/services/predictions/scorePredictions';
 import { toMatch } from '@/lib/types/tournament.types';
 import type { Tables } from '@/lib/database.types';
 
@@ -87,7 +87,10 @@ export const POST = withErrorHandler(async (
       team_b_id: string | null;
     }
 
-    while (currentByeId && loserId) {
+    const MAX_BYE_DEPTH = 16;
+    let byeDepth = 0;
+    while (currentByeId && loserId && byeDepth < MAX_BYE_DEPTH) {
+      byeDepth++;
       const { data: lbRow }: { data: LbMatchRow | null } = await supabase
         .from('matches')
         .select('id, is_bye, state, team_a_id, team_b_id, winner_next_match_id')
@@ -135,6 +138,51 @@ export const POST = withErrorHandler(async (
       currentByeId = lbRow.winner_next_match_id ?? null;
     }
   }
+
+  return NextResponse.json({ data: { success: true }, error: null });
+});
+
+export const DELETE = withErrorHandler(async (
+  _request: NextRequest,
+  context: RouteContext
+) => {
+  const { id, matchId } = await context.params;
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+
+  if (!user) throw new UnauthorizedError();
+
+  const tournament = await validateTournamentOwnership(user.id, id);
+  if (tournament.state !== 'in-progress') {
+    throw new ForbiddenError('Can only undo match results during an in-progress tournament.');
+  }
+
+  const { data: matchRow, error: fetchError } = await supabase
+    .from('matches')
+    .select('*')
+    .eq('id', matchId)
+    .eq('tournament_id', id)
+    .single();
+
+  if (fetchError || !matchRow) throw new ValidationError('Match not found');
+
+  const match = toMatch(matchRow as unknown as Tables<'matches'>);
+
+  if (match.state !== 'completed') {
+    throw new ValidationError('Match is not completed — nothing to undo.');
+  }
+  if (match.isBye) {
+    throw new ValidationError('Cannot undo a bye match.');
+  }
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { error: rpcError } = await (supabase.rpc as any)('reverse_match_winner', {
+    p_match_id: matchId,
+  });
+
+  if (rpcError) throw new ValidationError(rpcError.message);
+
+  await unscoreMatch(id, matchId);
 
   return NextResponse.json({ data: { success: true }, error: null });
 });

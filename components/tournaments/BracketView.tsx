@@ -27,14 +27,18 @@ function MatchCard({
   isOrganizer,
   canRecordWinners,
   onSelectWinner,
+  onUndoWinner,
   loading,
+  undoLoading,
 }: {
   match: Match;
   teams: Team[];
   isOrganizer?: boolean;
   canRecordWinners?: boolean;
   onSelectWinner?: (matchId: string, winnerId: string) => void;
+  onUndoWinner?: (matchId: string) => void;
   loading?: boolean;
+  undoLoading?: boolean;
 }) {
   const teamA = teams.find((t) => t.id === match.teamAId);
   const teamB = teams.find((t) => t.id === match.teamBId);
@@ -106,6 +110,20 @@ function MatchCard({
           </Button>
         </div>
       )}
+
+      {isOrganizer && canRecordWinners && match.state === 'completed' && !match.isBye && onUndoWinner && (
+        <div className="mt-2">
+          <Button
+            size="sm"
+            variant="ghost"
+            className="w-full text-xs text-muted-foreground hover:text-destructive"
+            disabled={undoLoading}
+            onClick={() => onUndoWinner(match.id)}
+          >
+            Undo result
+          </Button>
+        </div>
+      )}
     </div>
   );
 }
@@ -117,6 +135,9 @@ export function BracketView({ tournament, teams, matches, isOrganizer }: Bracket
   const [error, setError] = useState<string | null>(null);
   const [showResetDialog, setShowResetDialog] = useState(false);
   const [resetting, setResetting] = useState(false);
+  const [undoMatchId, setUndoMatchId] = useState<string | null>(null);
+  const [showUndoDialog, setShowUndoDialog] = useState(false);
+  const [undoLoading, setUndoLoading] = useState(false);
 
   const categories = [...new Set(matches.map((m) => m.bracketCategory ?? 'winners'))];
 
@@ -137,6 +158,34 @@ export function BracketView({ tournament, teams, matches, isOrganizer }: Bracket
       setError(err instanceof Error ? err.message : 'Failed to reset bracket');
     } finally {
       setResetting(false);
+    }
+  }
+
+  function handleRequestUndo(matchId: string) {
+    setUndoMatchId(matchId);
+    setShowUndoDialog(true);
+  }
+
+  async function handleConfirmUndo() {
+    if (!undoMatchId) return;
+    setUndoLoading(true);
+    setError(null);
+    try {
+      const res = await fetch(
+        `/api/tournaments/${tournament.id}/matches/${undoMatchId}/winner`,
+        { method: 'DELETE' }
+      );
+      if (!res.ok) {
+        const json = await res.json();
+        throw new Error(json.error ?? 'Failed to undo result');
+      }
+      setShowUndoDialog(false);
+      setUndoMatchId(null);
+      router.refresh();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to undo result');
+    } finally {
+      setUndoLoading(false);
     }
   }
 
@@ -217,6 +266,36 @@ export function BracketView({ tournament, teams, matches, isOrganizer }: Bracket
         </DialogContent>
       </Dialog>
 
+      <Dialog open={showUndoDialog} onOpenChange={setShowUndoDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Undo Match Result?</DialogTitle>
+            <DialogDescription>
+              This will clear the recorded winner and reverse any bracket advancement
+              from this match. Prediction scores for this match will also be reset.
+              The match will return to in-progress so the correct result can be recorded.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setShowUndoDialog(false)}
+              disabled={undoLoading}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={handleConfirmUndo}
+              disabled={undoLoading}
+              loading={undoLoading}
+            >
+              Undo Result
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       {categories.map((category) => {
         const categoryMatches = matches.filter(
           (m) => (m.bracketCategory ?? 'winners') === category
@@ -248,7 +327,9 @@ export function BracketView({ tournament, teams, matches, isOrganizer }: Bracket
                         isOrganizer={isOrganizer}
                         canRecordWinners={canRecordWinners}
                         onSelectWinner={handleSelectWinner}
+                        onUndoWinner={handleRequestUndo}
                         loading={loading}
+                        undoLoading={undoLoading && undoMatchId === m.id}
                       />
                     ))}
                   </div>

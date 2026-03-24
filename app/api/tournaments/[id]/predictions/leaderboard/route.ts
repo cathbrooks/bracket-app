@@ -2,6 +2,7 @@ import { NextResponse, type NextRequest } from 'next/server';
 import { withErrorHandler } from '@/lib/errors/api-error-handler';
 import { NotFoundError } from '@/lib/errors/custom-errors';
 import { createClient } from '@/lib/supabase/server';
+import { pointsForRound } from '@/lib/services/predictions/pointsForRound';
 
 type RouteContext = { params: Promise<{ id: string }> };
 
@@ -38,7 +39,7 @@ export const GET = withErrorHandler(async (
     if (row.is_bye) continue; // exclude bye matches from scoring and accuracy percentage
     matchResults.set(row.id, {
       winnerId: row.winner_team_id,
-      points: Math.pow(2, row.round - 1),
+      points: pointsForRound(row.round),
     });
   }
 

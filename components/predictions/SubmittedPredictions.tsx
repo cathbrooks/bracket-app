@@ -86,13 +86,37 @@ export function SubmittedPredictions({
 
   /**
    * Propagate picks forward so later-round match cards show the predicted teams —
-   * identical logic to BracketPredictionForm.
+   * similar to BracketPredictionForm, but with an extra clearing step.
+   *
+   * Once the tournament is in progress the DB already has the actual advancing
+   * teams in later-round match slots. We must clear those slots before
+   * propagating the user's picks; otherwise the DB values block propagation and
+   * a user who predicted the wrong team to advance sees no pick displayed for
+   * that match ("no winner" visual bug).
+   *
+   * Only slots fed by non-bye playable matches are cleared — bye-winner slots
+   * are known from the DB and should be preserved.
    */
   const predictedParticipants = useMemo(() => {
     const picks = predictions ?? {};
     const result = new Map<string, { teamAId: string | null; teamBId: string | null }>();
     for (const match of matches) {
       result.set(match.id, { teamAId: match.teamAId, teamBId: match.teamBId });
+    }
+
+    // Clear slots that will be filled by prediction propagation so that
+    // actual DB-stored advancing teams don't block pick propagation.
+    for (const match of playableMatches) {
+      for (const nextId of [match.winnerNextMatchId, match.loserNextMatchId]) {
+        if (!nextId) continue;
+        const feeders = feederMap.get(nextId) ?? [];
+        const idx = feeders.indexOf(match.id);
+        if (idx < 0) continue;
+        const current = result.get(nextId);
+        if (!current) continue;
+        if (idx === 0) result.set(nextId, { ...current, teamAId: null });
+        else if (idx === 1) result.set(nextId, { ...current, teamBId: null });
+      }
     }
 
     const sorted = [...playableMatches].sort(

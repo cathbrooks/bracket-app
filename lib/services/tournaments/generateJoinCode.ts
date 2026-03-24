@@ -19,10 +19,6 @@ export async function generateUniqueJoinCode(): Promise<string> {
       .eq('join_code', code)
       .limit(1);
 
-    // #region agent log
-    fetch('http://127.0.0.1:7886/ingest/2affbf00-a3fc-4e94-a928-3efc7a4a95d5',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'dd6809'},body:JSON.stringify({sessionId:'dd6809',location:'generateJoinCode.ts:19',message:'join code uniqueness check',data:{attempt,code,hasData:!!data,dataLen:data?.length??null,errorMsg:jcError?.message??null,errorCode:jcError?.code??null},timestamp:Date.now(),hypothesisId:'H1'})}).catch(()=>{});
-    // #endregion
-
     if (!data || data.length === 0) {
       return code;
     }

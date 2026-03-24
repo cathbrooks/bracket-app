@@ -10,6 +10,7 @@ import {
   useMemo,
   type ReactNode,
 } from 'react';
+import { createClient } from '@/lib/supabase/client';
 
 export interface LeaderboardEntry {
   rank: number;
@@ -40,13 +41,11 @@ export const PredictionDataContext = createContext<PredictionDataContextValue>({
 interface PredictionDataProviderProps {
   tournamentId: string;
   children: ReactNode;
-  pollIntervalMs?: number;
 }
 
 export function PredictionDataProvider({
   tournamentId,
   children,
-  pollIntervalMs = 15000,
 }: PredictionDataProviderProps) {
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -75,12 +74,29 @@ export function PredictionDataProvider({
     }
 
     fetchLeaderboard();
-    const interval = setInterval(fetchLeaderboard, pollIntervalMs);
+
+    const supabase = createClient();
+    const channel = supabase
+      .channel(`prediction-data:${tournamentId}`)
+      .on(
+        'postgres_changes' as never,
+        {
+          event: '*',
+          schema: 'public',
+          table: 'bracket_predictions',
+          filter: `tournament_id=eq.${tournamentId}`,
+        } as never,
+        () => {
+          if (!cancelled) fetchLeaderboard();
+        }
+      )
+      .subscribe();
+
     return () => {
       cancelled = true;
-      clearInterval(interval);
+      supabase.removeChannel(channel);
     };
-  }, [tournamentId, pollIntervalMs, fetchTick]);
+  }, [tournamentId, fetchTick]);
 
   const matchCounts = useMemo(() => {
     const map = new Map<string, Map<string, number>>();

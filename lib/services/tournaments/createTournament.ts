@@ -61,10 +61,6 @@ export async function createTournament(
     .select()
     .single();
 
-  // #region agent log
-  fetch('http://127.0.0.1:7886/ingest/2affbf00-a3fc-4e94-a928-3efc7a4a95d5',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'dd6809'},body:JSON.stringify({sessionId:'dd6809',location:'createTournament.ts:55',message:'tournament insert result',data:{hasData:!!tournament,errorMsg:tournamentError?.message??null,errorCode:tournamentError?.code??null,errorDetails:tournamentError?.details??null,errorHint:tournamentError?.hint??null},timestamp:Date.now(),hypothesisId:'H1'})}).catch(()=>{});
-  // #endregion
-
   if (tournamentError || !tournament) {
     throw new ValidationError(
       tournamentError?.message ?? 'Failed to create tournament'

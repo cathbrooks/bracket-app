@@ -28,6 +28,7 @@ export function useRealtimeBracket(
     useState<ConnectionState>('disconnected');
   const [error, setError] = useState<string | null>(null);
   const reconnectAttempts = useRef(0);
+  const reconnectTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const supabaseRef = useRef(createClient());
 
   const fetchMatches = useCallback(async () => {
@@ -96,7 +97,7 @@ export function useRealtimeBracket(
           ) {
             const delay = getReconnectDelay(reconnectAttempts.current);
             reconnectAttempts.current += 1;
-            setTimeout(() => {
+            reconnectTimerRef.current = setTimeout(() => {
               channel.subscribe();
             }, delay);
           } else {
@@ -109,6 +110,7 @@ export function useRealtimeBracket(
       });
 
     return () => {
+      if (reconnectTimerRef.current) clearTimeout(reconnectTimerRef.current);
       supabase.removeChannel(channel);
     };
   }, [tournamentId, fetchMatches]);

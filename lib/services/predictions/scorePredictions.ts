@@ -1,5 +1,40 @@
 import { createClient } from '@/lib/supabase/server';
 import type { Tables } from '@/lib/database.types';
+import { pointsForRound } from './pointsForRound';
+
+// Re-usable helper: aggregate prediction_scores into bracket_predictions totals.
+async function updateBracketPredictionTotals(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  bracketPredictionIds: string[]
+): Promise<void> {
+  const { data: allScores } = await supabase
+    .from('prediction_scores')
+    .select('bracket_prediction_id, points_earned')
+    .in('bracket_prediction_id', bracketPredictionIds);
+
+  if (!allScores || allScores.length === 0) return;
+
+  const totals = new Map<string, { totalPoints: number; correctCount: number }>();
+  for (const id of bracketPredictionIds) {
+    totals.set(id, { totalPoints: 0, correctCount: 0 });
+  }
+  for (const score of allScores as unknown as { bracket_prediction_id: string; points_earned: number }[]) {
+    const entry = totals.get(score.bracket_prediction_id);
+    if (entry) {
+      entry.totalPoints += score.points_earned;
+      if (score.points_earned > 0) entry.correctCount++;
+    }
+  }
+
+  await Promise.all(
+    [...totals.entries()].map(([id, { totalPoints, correctCount }]) =>
+      supabase
+        .from('bracket_predictions')
+        .update({ total_points: totalPoints, correct_count: correctCount } as never)
+        .eq('id', id)
+    )
+  );
+}
 
 /**
  * Score all predictions for a completed match.
@@ -13,7 +48,7 @@ export async function scorePredictionsForMatch(
 ): Promise<void> {
   const supabase = await createClient();
 
-  const points = Math.pow(2, round - 1);
+  const points = pointsForRound(round);
 
   const { data: predictions } = await supabase
     .from('prediction_scores')
@@ -45,36 +80,36 @@ export async function scorePredictionsForMatch(
         .in('id', incorrectIds),
   ]);
 
-  // Fetch all scores for affected bracket_predictions in one query
   const bracketPredictionIds = [...new Set(predRows.map((p) => p.bracket_prediction_id))];
+  await updateBracketPredictionTotals(supabase, bracketPredictionIds);
+}
 
-  const { data: allScores } = await supabase
+/**
+ * Revert prediction scores for a match whose result has been undone.
+ * Clears actual_winner_team_id and points_earned, then recalculates
+ * bracket_predictions totals from the remaining scored matches.
+ */
+export async function unscoreMatch(
+  _tournamentId: string,
+  matchId: string
+): Promise<void> {
+  const supabase = await createClient();
+
+  const { data: predictions } = await supabase
     .from('prediction_scores')
-    .select('bracket_prediction_id, points_earned')
-    .in('bracket_prediction_id', bracketPredictionIds);
+    .select('id, bracket_prediction_id')
+    .eq('match_id', matchId);
 
-  if (!allScores || allScores.length === 0) return;
+  if (!predictions || predictions.length === 0) return;
 
-  // Aggregate totals in memory
-  const totals = new Map<string, { totalPoints: number; correctCount: number }>();
-  for (const id of bracketPredictionIds) {
-    totals.set(id, { totalPoints: 0, correctCount: 0 });
-  }
-  for (const score of allScores as unknown as { bracket_prediction_id: string; points_earned: number }[]) {
-    const entry = totals.get(score.bracket_prediction_id);
-    if (entry) {
-      entry.totalPoints += score.points_earned;
-      if (score.points_earned > 0) entry.correctCount++;
-    }
-  }
+  const predRows = predictions as unknown as Tables<'prediction_scores'>[];
+  const allIds = predRows.map((p) => p.id);
 
-  // Update all bracket_predictions in parallel instead of sequentially
-  await Promise.all(
-    [...totals.entries()].map(([id, { totalPoints, correctCount }]) =>
-      supabase
-        .from('bracket_predictions')
-        .update({ total_points: totalPoints, correct_count: correctCount } as never)
-        .eq('id', id)
-    )
-  );
+  await supabase
+    .from('prediction_scores')
+    .update({ actual_winner_team_id: null, points_earned: 0 } as never)
+    .in('id', allIds);
+
+  const bracketPredictionIds = [...new Set(predRows.map((p) => p.bracket_prediction_id))];
+  await updateBracketPredictionTotals(supabase, bracketPredictionIds);
 }

@@ -22,9 +22,8 @@ export function QRCodeDisplay({ joinCode, tournamentName }: QRCodeDisplayProps) 
     setOrigin(window.location.origin);
   }, []);
 
-  // Base URL for spectators — they must enter the join code on the entry page.
-  // QR code and shared link point here so code is always required.
-  const spectatorEntryUrl = `${origin}/spectator/view`;
+  // Direct URL with join code embedded — scanning auto-fills the code.
+  const spectatorEntryUrl = `${origin}/spectator/view/${joinCode}`;
 
   const handleDownload = useCallback(() => {
     const svg = svgRef.current?.querySelector('svg');
@@ -55,7 +54,7 @@ export function QRCodeDisplay({ joinCode, tournamentName }: QRCodeDisplayProps) 
           <h2>${tournamentName}</h2>
           <p>Join Code: ${joinCode}</p>
           ${svg.outerHTML}
-          <p style="margin-top:16px;color:#666">Scan and enter code to view the bracket</p>
+          <p style="margin-top:16px;color:#666">Scan to view the bracket instantly</p>
         </div>
       </body></html>
     `);
@@ -92,7 +91,7 @@ export function QRCodeDisplay({ joinCode, tournamentName }: QRCodeDisplayProps) 
         </div>
 
         <p className="text-xs text-muted-foreground">
-          Spectators visit this URL and enter the join code above.
+          Scan to go directly to the bracket, or share the link below.
         </p>
         <div className="flex items-center gap-2">
           <Input value={spectatorEntryUrl} readOnly className="text-xs" />
