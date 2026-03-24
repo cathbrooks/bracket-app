@@ -1,6 +1,6 @@
 'use client';
 
-import { use } from 'react';
+import { use, useState } from 'react';
 import { BracketView } from '@/components/bracket/BracketView';
 import { BracketPredictionForm } from '@/components/predictions/BracketPredictionForm';
 import { PredictionLeaderboard } from '@/components/predictions/PredictionLeaderboard';
@@ -10,6 +10,7 @@ import { useBracketData } from '@/hooks/useBracketData';
 import { ConnectionStatus } from '@/components/ConnectionStatus';
 import { PredictionDataProvider, usePredictionData } from '@/contexts/PredictionDataContext';
 import { Loader2 } from 'lucide-react';
+import { cn } from '@/lib/utils';
 import type { Tournament, Match, Team } from '@/lib/types/tournament.types';
 
 function getSessionId(): string {
@@ -29,9 +30,12 @@ interface SpectatorContentProps {
   connectionState: string;
 }
 
+type MobileTab = 'bracket' | 'predict' | 'leaderboard';
+
 function SpectatorContent({ tournament, matches, teams, connectionState }: SpectatorContentProps) {
   const { leaderboard, refetch } = usePredictionData();
   const sessionId = getSessionId();
+  const [activeTab, setActiveTab] = useState<MobileTab>('bracket');
 
   const hasSubmittedPredictions = leaderboard.some((e) => e.sessionId === sessionId);
 
@@ -52,54 +56,121 @@ function SpectatorContent({ tournament, matches, teams, connectionState }: Spect
     : null;
 
   const isCompleted = tournament.state === 'completed';
+  const hasPredictTab = showPredictionForm && playableMatches.length > 0;
+
+  const mobileTabs: { id: MobileTab; label: string }[] = [
+    { id: 'bracket', label: 'Bracket' },
+    ...(hasPredictTab ? [{ id: 'predict' as MobileTab, label: 'Predict' }] : []),
+    { id: 'leaderboard', label: 'Scores' },
+  ];
+
+  const sidebarContent = (
+    <div className="space-y-6">
+      {showPredictionForm && playableMatches.length > 0 && (
+        <BracketPredictionForm
+          tournament={tournament}
+          matches={matches}
+          teams={teams}
+          onSubmitted={refetch}
+        />
+      )}
+      {hasSubmittedPredictions && (
+        <SubmittedPredictions
+          tournament={tournament}
+          matches={matches}
+          teams={teams}
+          sessionId={sessionId}
+        />
+      )}
+      <PredictionLeaderboard currentSessionId={sessionId} />
+    </div>
+  );
 
   return (
-    <div className="container py-4">
-      <div className="mb-4 flex items-center justify-between">
-        <div>
-          <h1 className="text-xl font-bold">{tournament.name}</h1>
-          <p className="text-sm text-muted-foreground">{tournament.gameType}</p>
+    <div className="flex min-h-screen flex-col">
+      {/* Sticky header */}
+      <header className="sticky top-0 z-40 border-b bg-background/95 backdrop-blur-sm">
+        <div className="container flex items-center justify-between gap-3 py-3">
+          <div className="min-w-0">
+            <h1 className="truncate text-base font-bold leading-tight sm:text-xl">{tournament.name}</h1>
+            <p className="truncate text-xs text-muted-foreground sm:text-sm">{tournament.gameType}</p>
+          </div>
+          <div className="shrink-0">
+            <ConnectionStatus state={connectionState as 'connected' | 'connecting' | 'disconnected' | 'reconnecting'} />
+          </div>
         </div>
-        <ConnectionStatus state={connectionState as 'connected' | 'connecting' | 'disconnected' | 'reconnecting'} />
-      </div>
 
-      {isCompleted && championTeam ? (
-        <div className="mb-8">
+        {/* Mobile tab bar */}
+        <div className="container pb-0 lg:hidden">
+          <div className="flex border-b">
+            {mobileTabs.map((tab) => (
+              <button
+                key={tab.id}
+                type="button"
+                onClick={() => setActiveTab(tab.id)}
+                className={cn(
+                  'flex-1 py-2.5 text-sm font-medium transition-colors',
+                  activeTab === tab.id
+                    ? 'border-b-2 border-primary text-primary'
+                    : 'text-muted-foreground hover:text-foreground'
+                )}
+              >
+                {tab.label}
+                {tab.id === 'leaderboard' && leaderboard.length > 0 && (
+                  <span className="ml-1.5 inline-flex h-4 w-4 items-center justify-center rounded-full bg-muted text-[10px] font-semibold">
+                    {leaderboard.length}
+                  </span>
+                )}
+              </button>
+            ))}
+          </div>
+        </div>
+      </header>
+
+      {/* Celebration banner */}
+      {isCompleted && championTeam && (
+        <div className="container pt-4 pb-2">
           <CelebrationScreen
             tournamentName={tournament.name}
             winnerTeamName={championTeam.name}
             predictionWinner={predictionWinner}
           />
         </div>
-      ) : null}
+      )}
 
-      <div className="grid gap-6 lg:grid-cols-[1fr_320px] lg:items-start">
-        <div>
-          <BracketView
+      {/* Mobile content — tab-driven */}
+      <div className="container flex-1 pb-28 pt-4 lg:hidden">
+        {activeTab === 'bracket' && (
+          <BracketView tournament={tournament} matches={matches} teams={teams} />
+        )}
+        {activeTab === 'predict' && hasPredictTab && (
+          <BracketPredictionForm
             tournament={tournament}
             matches={matches}
             teams={teams}
+            onSubmitted={() => { refetch(); setActiveTab('leaderboard'); }}
           />
-        </div>
+        )}
+        {activeTab === 'leaderboard' && (
+          <div className="space-y-6">
+            {hasSubmittedPredictions && (
+              <SubmittedPredictions
+                tournament={tournament}
+                matches={matches}
+                teams={teams}
+                sessionId={sessionId}
+              />
+            )}
+            <PredictionLeaderboard currentSessionId={sessionId} />
+          </div>
+        )}
+      </div>
 
-        <div className="space-y-6">
-          {showPredictionForm && playableMatches.length > 0 && (
-            <BracketPredictionForm
-              tournament={tournament}
-              matches={matches}
-              teams={teams}
-              onSubmitted={refetch}
-            />
-          )}
-          {hasSubmittedPredictions && (
-            <SubmittedPredictions
-              tournament={tournament}
-              matches={matches}
-              teams={teams}
-              sessionId={sessionId}
-            />
-          )}
-          <PredictionLeaderboard currentSessionId={sessionId} />
+      {/* Desktop content — side-by-side */}
+      <div className="container hidden pb-28 pt-4 lg:block">
+        <div className="grid gap-6 lg:grid-cols-[1fr_320px] lg:items-start">
+          <BracketView tournament={tournament} matches={matches} teams={teams} />
+          {sidebarContent}
         </div>
       </div>
     </div>

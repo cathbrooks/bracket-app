@@ -619,7 +619,7 @@ function PredictionTeamRow({
       disabled={disabled}
       onClick={onClick}
       className={cn(
-        'w-full flex items-center gap-1.5 rounded px-1.5 py-0.5 text-left transition-colors',
+        'w-full flex items-center gap-1.5 rounded px-2 py-2 text-left transition-colors min-h-[40px]',
         isPicked && !isAuto && 'bg-primary/10 text-primary font-semibold',
         isPicked && isAuto && 'bg-primary/5 text-primary/70 font-medium',
         isLoser && 'text-muted-foreground/50 line-through',
@@ -632,7 +632,7 @@ function PredictionTeamRow({
       {team?.seed != null && (
         <span className="w-4 shrink-0 text-[10px] text-muted-foreground">{team.seed}</span>
       )}
-      <span className="flex-1 truncate text-xs">{label}</span>
+      <span className="flex-1 truncate text-sm">{label}</span>
       {isPicked && team && (
         <span className="shrink-0 text-xs font-bold text-green-600 dark:text-green-400">W</span>
       )}

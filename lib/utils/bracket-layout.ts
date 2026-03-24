@@ -79,7 +79,7 @@ export interface MatchPosition {
 
 const MATCH_WIDTH = 220;
 const MATCH_HEIGHT = 72;
-const SPECTATOR_MATCH_HEIGHT = 140;
+const SPECTATOR_MATCH_HEIGHT = 200;
 const ROUND_GAP = 60;
 const MATCH_VERTICAL_GAP = 16;
 

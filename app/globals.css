@@ -57,3 +57,725 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* ============================================================
+   LAYOUT 2 — DARK NEON
+   Deep dark background, electric violet primary, neon cyan accent
+   ============================================================ */
+html[data-layout="2"] {
+  --background: 240 15% 5%;
+  --foreground: 210 30% 95%;
+  --card: 240 12% 9%;
+  --card-foreground: 210 30% 95%;
+  --popover: 240 12% 9%;
+  --popover-foreground: 210 30% 95%;
+  --primary: 262 100% 68%;
+  --primary-foreground: 0 0% 100%;
+  --secondary: 240 12% 16%;
+  --secondary-foreground: 210 30% 90%;
+  --muted: 240 10% 14%;
+  --muted-foreground: 240 10% 55%;
+  --accent: 180 100% 50%;
+  --accent-foreground: 240 15% 5%;
+  --destructive: 0 80% 55%;
+  --destructive-foreground: 0 0% 100%;
+  --border: 240 12% 20%;
+  --input: 240 12% 16%;
+  --ring: 262 100% 68%;
+  --radius: 0.25rem;
+}
+
+html[data-layout="2"] body {
+  background: hsl(240, 15%, 5%);
+}
+
+html[data-layout="2"] .rounded-lg,
+html[data-layout="2"] .rounded-md,
+html[data-layout="2"] [class*="rounded"] {
+  box-shadow: 0 0 0 1px hsl(262 100% 68% / 0.15), 0 4px 24px hsl(262 100% 68% / 0.08);
+}
+
+html[data-layout="2"] button[class*="bg-primary"],
+html[data-layout="2"] [class*="bg-primary"] {
+  box-shadow: 0 0 16px hsl(262 100% 68% / 0.5);
+}
+
+/* ============================================================
+   LAYOUT 3 — BRUTALIST
+   High-contrast yellow/black, zero border radius, thick borders
+   ============================================================ */
+html[data-layout="3"] {
+  --background: 54 100% 93%;
+  --foreground: 0 0% 0%;
+  --card: 0 0% 100%;
+  --card-foreground: 0 0% 0%;
+  --popover: 0 0% 100%;
+  --popover-foreground: 0 0% 0%;
+  --primary: 0 0% 0%;
+  --primary-foreground: 54 100% 93%;
+  --secondary: 48 100% 68%;
+  --secondary-foreground: 0 0% 0%;
+  --muted: 54 60% 85%;
+  --muted-foreground: 0 0% 25%;
+  --accent: 0 100% 45%;
+  --accent-foreground: 0 0% 100%;
+  --destructive: 0 100% 45%;
+  --destructive-foreground: 0 0% 100%;
+  --border: 0 0% 0%;
+  --input: 0 0% 100%;
+  --ring: 0 0% 0%;
+  --radius: 0rem;
+}
+
+html[data-layout="3"] body {
+  background: hsl(54, 100%, 93%);
+}
+
+html[data-layout="3"] .rounded-lg,
+html[data-layout="3"] .rounded-md,
+html[data-layout="3"] .rounded-sm,
+html[data-layout="3"] .rounded,
+html[data-layout="3"] .rounded-full,
+html[data-layout="3"] [class*="rounded"] {
+  border-radius: 0 !important;
+}
+
+html[data-layout="3"] [class*="border"],
+html[data-layout="3"] input,
+html[data-layout="3"] button,
+html[data-layout="3"] [class*="card"] {
+  border-width: 2px;
+  border-color: black;
+}
+
+html[data-layout="3"] h1,
+html[data-layout="3"] h2,
+html[data-layout="3"] h3 {
+  text-transform: uppercase;
+  letter-spacing: -0.02em;
+  font-weight: 900;
+}
+
+/* ============================================================
+   LAYOUT 4 — CHAMPIONSHIP GOLD
+   Deep navy background, gold/amber accents, bold championship feel
+   ============================================================ */
+html[data-layout="4"] {
+  --background: 222 47% 8%;
+  --foreground: 45 80% 92%;
+  --card: 222 45% 12%;
+  --card-foreground: 45 80% 92%;
+  --popover: 222 45% 12%;
+  --popover-foreground: 45 80% 92%;
+  --primary: 43 96% 56%;
+  --primary-foreground: 222 47% 8%;
+  --secondary: 222 40% 18%;
+  --secondary-foreground: 45 80% 85%;
+  --muted: 222 40% 15%;
+  --muted-foreground: 222 20% 55%;
+  --accent: 43 96% 56%;
+  --accent-foreground: 222 47% 8%;
+  --destructive: 0 80% 55%;
+  --destructive-foreground: 0 0% 100%;
+  --border: 43 40% 25%;
+  --input: 222 40% 18%;
+  --ring: 43 96% 56%;
+  --radius: 0.375rem;
+}
+
+html[data-layout="4"] body {
+  background: hsl(222, 47%, 8%);
+}
+
+html[data-layout="4"] [class*="card"],
+html[data-layout="4"] .rounded-lg {
+  border: 1px solid hsl(43 96% 56% / 0.25);
+}
+
+html[data-layout="4"] h1,
+html[data-layout="4"] h2 {
+  background: linear-gradient(135deg, hsl(43, 96%, 70%), hsl(36, 100%, 55%));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* ============================================================
+   LAYOUT 5 — RETRO TERMINAL
+   Black background, phosphor green, monospace font, scan-line vibe
+   ============================================================ */
+html[data-layout="5"] {
+  --background: 0 0% 0%;
+  --foreground: 120 100% 65%;
+  --card: 120 30% 4%;
+  --card-foreground: 120 100% 65%;
+  --popover: 120 30% 4%;
+  --popover-foreground: 120 100% 65%;
+  --primary: 120 100% 50%;
+  --primary-foreground: 0 0% 0%;
+  --secondary: 120 30% 10%;
+  --secondary-foreground: 120 100% 65%;
+  --muted: 120 20% 8%;
+  --muted-foreground: 120 40% 40%;
+  --accent: 120 100% 50%;
+  --accent-foreground: 0 0% 0%;
+  --destructive: 0 100% 55%;
+  --destructive-foreground: 0 0% 0%;
+  --border: 120 60% 18%;
+  --input: 120 20% 8%;
+  --ring: 120 100% 50%;
+  --radius: 0rem;
+}
+
+html[data-layout="5"] body {
+  background: black;
+  font-family: 'Courier New', Courier, monospace;
+}
+
+html[data-layout="5"] * {
+  font-family: 'Courier New', Courier, monospace !important;
+}
+
+html[data-layout="5"] .rounded-lg,
+html[data-layout="5"] .rounded-md,
+html[data-layout="5"] [class*="rounded"] {
+  border-radius: 0 !important;
+}
+
+html[data-layout="5"] [class*="card"],
+html[data-layout="5"] input,
+html[data-layout="5"] button {
+  border: 1px solid hsl(120 100% 50% / 0.4);
+  box-shadow: 0 0 8px hsl(120 100% 50% / 0.15), inset 0 0 8px hsl(120 100% 50% / 0.05);
+}
+
+html[data-layout="5"] body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 2px,
+    hsl(120 100% 5% / 0.15) 2px,
+    hsl(120 100% 5% / 0.15) 4px
+  );
+  pointer-events: none;
+  z-index: 9998;
+}
+
+html[data-layout="5"] button[class*="bg-primary"] {
+  box-shadow: 0 0 12px hsl(120 100% 50% / 0.6);
+}
+
+/* ============================================================
+   LAYOUT 6 — CANDY PASTEL
+   Soft lavender background, hot pink primary, maximum roundness
+   ============================================================ */
+html[data-layout="6"] {
+  --background: 270 40% 95%;
+  --foreground: 270 30% 20%;
+  --card: 0 0% 100%;
+  --card-foreground: 270 30% 20%;
+  --popover: 0 0% 100%;
+  --popover-foreground: 270 30% 20%;
+  --primary: 24 100% 55%;
+  --primary-foreground: 0 0% 100%;
+  --secondary: 200 80% 85%;
+  --secondary-foreground: 200 60% 25%;
+  --muted: 270 30% 90%;
+  --muted-foreground: 270 20% 50%;
+  --accent: 160 70% 65%;
+  --accent-foreground: 160 60% 15%;
+  --destructive: 0 84% 60%;
+  --destructive-foreground: 0 0% 100%;
+  --border: 270 30% 82%;
+  --input: 0 0% 100%;
+  --ring: 24 100% 55%;
+  --radius: 1.25rem;
+}
+
+html[data-layout="6"] body {
+  background: hsl(270, 40%, 95%);
+}
+
+html[data-layout="6"] .rounded-full {
+  border-radius: 9999px !important;
+}
+
+html[data-layout="6"] [class*="card"] {
+  box-shadow: 0 4px 20px hsl(270 40% 70% / 0.3), 0 1px 4px hsl(270 40% 70% / 0.2);
+  border: 1px solid hsl(270 30% 88%);
+}
+
+html[data-layout="6"] button[class*="bg-primary"] {
+  box-shadow: 0 4px 16px hsl(24 100% 55% / 0.35);
+}
+
+/* ============================================================
+   LAYOUT SWITCHER PILL BAR
+   Floats at bottom center, adapts visually per layout
+   ============================================================ */
+.layout-switcher {
+  position: fixed;
+  bottom: 28px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  padding: 8px 14px;
+  border-radius: 9999px;
+  z-index: 99999;
+  background: rgba(15, 15, 20, 0.75);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  box-shadow: 0 4px 32px rgba(0, 0, 0, 0.4), 0 1px 0 rgba(255,255,255,0.06) inset;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.layout-pill {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  border: 1.5px solid rgba(255, 255, 255, 0.25);
+  background: transparent;
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease, transform 0.1s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  font-family: inherit;
+}
+
+.layout-pill:hover {
+  background: rgba(255, 255, 255, 0.18);
+  color: rgba(255, 255, 255, 0.95);
+  border-color: rgba(255, 255, 255, 0.5);
+  transform: scale(1.08);
+}
+
+.layout-pill--active {
+  background: white;
+  color: black;
+  border-color: white;
+  transform: scale(1.08);
+}
+
+/* Brutalist override for pill bar */
+html[data-layout="3"] .layout-switcher {
+  border-radius: 0;
+  background: black;
+  border: 3px solid black;
+  backdrop-filter: none;
+  box-shadow: 4px 4px 0 hsl(48, 100%, 68%);
+  bottom: 24px;
+}
+
+html[data-layout="3"] .layout-pill {
+  border-radius: 0;
+  border: 2px solid rgba(255, 255, 255, 0.4);
+  font-family: inherit;
+}
+
+html[data-layout="3"] .layout-pill--active {
+  background: hsl(48, 100%, 68%);
+  color: black;
+  border-color: hsl(48, 100%, 68%);
+}
+
+/* Terminal override for pill bar */
+html[data-layout="5"] .layout-switcher {
+  border-radius: 0;
+  background: black;
+  border: 1px solid hsl(120 100% 50% / 0.5);
+  box-shadow: 0 0 20px hsl(120 100% 50% / 0.2);
+  backdrop-filter: none;
+  font-family: 'Courier New', monospace;
+}
+
+html[data-layout="5"] .layout-pill {
+  border-radius: 0;
+  border-color: hsl(120 100% 50% / 0.3);
+  color: hsl(120 100% 50% / 0.5);
+  font-family: 'Courier New', monospace;
+}
+
+html[data-layout="5"] .layout-pill:hover {
+  background: hsl(120 100% 50% / 0.1);
+  color: hsl(120, 100%, 50%);
+  border-color: hsl(120 100% 50% / 0.7);
+}
+
+html[data-layout="5"] .layout-pill--active {
+  background: hsl(120, 100%, 50%);
+  color: black;
+  border-color: hsl(120, 100%, 50%);
+  box-shadow: 0 0 10px hsl(120 100% 50% / 0.6);
+}
+
+/* Candy override for pill bar */
+html[data-layout="6"] .layout-switcher {
+  background: white;
+  border: 1.5px solid hsl(270 30% 88%);
+  box-shadow: 0 8px 32px hsl(270 40% 70% / 0.3), 0 2px 8px hsl(270 40% 70% / 0.2);
+}
+
+html[data-layout="6"] .layout-pill {
+  color: hsl(270 30% 60%);
+  border-color: hsl(270 30% 82%);
+}
+
+html[data-layout="6"] .layout-pill:hover {
+  background: hsl(24 100% 95%);
+  color: hsl(24, 100%, 50%);
+  border-color: hsl(24 100% 75%);
+}
+
+html[data-layout="6"] .layout-pill--active {
+  background: hsl(24, 100%, 55%);
+  color: white;
+  border-color: hsl(24, 100%, 55%);
+  box-shadow: 0 4px 12px hsl(24 100% 55% / 0.4);
+}
+
+/* ============================================================
+   LAYOUT 7 — 8-BIT VIDEO GAME
+   Deep navy bg, bright cyan text, yellow headings, magenta primary,
+   Press Start 2P pixel font, chunky pixel-drop borders, zero radius
+   ============================================================ */
+@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+
+html[data-layout="7"] {
+  --background: 230 60% 8%;
+  --foreground: 180 100% 80%;
+  --card: 230 55% 13%;
+  --card-foreground: 180 100% 80%;
+  --popover: 230 55% 13%;
+  --popover-foreground: 180 100% 80%;
+  --primary: 300 100% 60%;
+  --primary-foreground: 0 0% 100%;
+  --secondary: 230 50% 20%;
+  --secondary-foreground: 180 100% 80%;
+  --muted: 230 45% 17%;
+  --muted-foreground: 180 60% 55%;
+  --accent: 60 100% 55%;
+  --accent-foreground: 230 60% 8%;
+  --destructive: 0 100% 60%;
+  --destructive-foreground: 0 0% 100%;
+  --border: 180 80% 35%;
+  --input: 230 50% 18%;
+  --ring: 300 100% 60%;
+  --radius: 0rem;
+}
+
+html[data-layout="7"] body {
+  background: hsl(230, 60%, 8%);
+  font-family: 'Press Start 2P', 'Courier New', monospace;
+  font-size: 14px;
+}
+
+html[data-layout="7"] * {
+  font-family: 'Press Start 2P', 'Courier New', monospace !important;
+  font-size: inherit;
+}
+
+html[data-layout="7"] p,
+html[data-layout="7"] span,
+html[data-layout="7"] label,
+html[data-layout="7"] li,
+html[data-layout="7"] td,
+html[data-layout="7"] [class*="text-sm"] {
+  font-size: 12px !important;
+}
+
+html[data-layout="7"] [class*="text-xs"] {
+  font-size: 11px !important;
+}
+
+html[data-layout="7"] h1,
+html[data-layout="7"] [class*="text-3xl"],
+html[data-layout="7"] [class*="text-2xl"] {
+  font-size: 20px !important;
+}
+
+html[data-layout="7"] h2,
+html[data-layout="7"] [class*="text-xl"] {
+  font-size: 16px !important;
+}
+
+html[data-layout="7"] h3,
+html[data-layout="7"] [class*="text-lg"] {
+  font-size: 14px !important;
+}
+
+html[data-layout="7"] .rounded-lg,
+html[data-layout="7"] .rounded-md,
+html[data-layout="7"] .rounded-sm,
+html[data-layout="7"] .rounded,
+html[data-layout="7"] .rounded-full,
+html[data-layout="7"] [class*="rounded"] {
+  border-radius: 0 !important;
+}
+
+html[data-layout="7"] [class*="card"],
+html[data-layout="7"] input {
+  border: 3px solid hsl(180, 80%, 50%);
+  box-shadow: 4px 4px 0 hsl(300 100% 40%);
+}
+
+html[data-layout="7"] button {
+  border: 3px solid hsl(180, 80%, 50%);
+}
+
+html[data-layout="7"] button[class*="bg-primary"] {
+  background: hsl(300, 100%, 55%);
+  color: white;
+  border: 3px solid hsl(180, 80%, 60%);
+  box-shadow: 4px 4px 0 hsl(60 100% 40%);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+html[data-layout="7"] button[class*="bg-primary"]:hover {
+  transform: translate(2px, 2px);
+  box-shadow: 2px 2px 0 hsl(60 100% 40%);
+}
+
+html[data-layout="7"] h1,
+html[data-layout="7"] h2,
+html[data-layout="7"] h3 {
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: hsl(60, 100%, 60%) !important;
+  -webkit-text-fill-color: hsl(60, 100%, 60%) !important;
+  background: none !important;
+  text-shadow: 3px 3px 0 hsl(300 100% 30%);
+}
+
+html[data-layout="7"] body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 3px,
+    hsl(230 60% 5% / 0.25) 3px,
+    hsl(230 60% 5% / 0.25) 4px
+  );
+  pointer-events: none;
+  z-index: 9998;
+}
+
+/* 8-bit pill bar override */
+html[data-layout="7"] .layout-switcher {
+  border-radius: 0;
+  background: hsl(230, 60%, 8%);
+  border: 3px solid hsl(180, 80%, 50%);
+  box-shadow: 4px 4px 0 hsl(300 100% 40%);
+  backdrop-filter: none;
+}
+
+html[data-layout="7"] .layout-pill {
+  border-radius: 0;
+  border: 2px solid hsl(180 80% 40%);
+  color: hsl(180, 80%, 60%);
+  font-size: 10px;
+}
+
+html[data-layout="7"] .layout-pill:hover {
+  background: hsl(300 100% 55% / 0.2);
+  color: hsl(300, 100%, 75%);
+  border-color: hsl(300, 100%, 60%);
+}
+
+html[data-layout="7"] .layout-pill--active {
+  background: hsl(300, 100%, 55%);
+  color: white;
+  border-color: hsl(180, 80%, 60%);
+  box-shadow: 2px 2px 0 hsl(60 100% 50%);
+}
+
+/* =============================================
+   LAYOUT 8 — 8Bit Light
+   ============================================= */
+html[data-layout="8"] {
+  --background: 60 35% 95%;
+  --foreground: 230 60% 12%;
+  --card: 60 25% 89%;
+  --card-foreground: 230 60% 12%;
+  --popover: 60 25% 89%;
+  --popover-foreground: 230 60% 12%;
+  --primary: 300 80% 38%;
+  --primary-foreground: 0 0% 100%;
+  --secondary: 230 25% 82%;
+  --secondary-foreground: 230 60% 12%;
+  --muted: 60 15% 84%;
+  --muted-foreground: 230 40% 38%;
+  --accent: 60 100% 40%;
+  --accent-foreground: 230 60% 8%;
+  --destructive: 0 85% 50%;
+  --destructive-foreground: 0 0% 100%;
+  --border: 230 50% 22%;
+  --input: 60 20% 86%;
+  --ring: 300 80% 38%;
+  --radius: 0rem;
+}
+
+html[data-layout="8"] body {
+  background: hsl(60, 35%, 95%);
+  font-family: 'Press Start 2P', 'Courier New', monospace;
+  font-size: 14px;
+}
+
+html[data-layout="8"] * {
+  font-family: 'Press Start 2P', 'Courier New', monospace !important;
+  font-size: inherit;
+}
+
+html[data-layout="8"] p,
+html[data-layout="8"] span,
+html[data-layout="8"] label,
+html[data-layout="8"] li,
+html[data-layout="8"] td,
+html[data-layout="8"] [class*="text-sm"] {
+  font-size: 12px !important;
+}
+
+html[data-layout="8"] [class*="text-xs"] {
+  font-size: 11px !important;
+}
+
+html[data-layout="8"] h1,
+html[data-layout="8"] [class*="text-3xl"],
+html[data-layout="8"] [class*="text-2xl"] {
+  font-size: 20px !important;
+}
+
+html[data-layout="8"] h2,
+html[data-layout="8"] [class*="text-xl"] {
+  font-size: 16px !important;
+}
+
+html[data-layout="8"] h3,
+html[data-layout="8"] [class*="text-lg"] {
+  font-size: 14px !important;
+}
+
+html[data-layout="8"] .rounded-lg,
+html[data-layout="8"] .rounded-md,
+html[data-layout="8"] .rounded-sm,
+html[data-layout="8"] .rounded,
+html[data-layout="8"] .rounded-full,
+html[data-layout="8"] [class*="rounded"] {
+  border-radius: 0 !important;
+}
+
+html[data-layout="8"] [class*="card"],
+html[data-layout="8"] input {
+  border: 3px solid hsl(230, 50%, 22%);
+  box-shadow: 4px 4px 0 hsl(300 80% 38%);
+}
+
+html[data-layout="8"] button {
+  border: 3px solid hsl(230, 50%, 22%);
+}
+
+html[data-layout="8"] button[class*="bg-primary"] {
+  background: hsl(300, 80%, 38%);
+  color: white;
+  border: 3px solid hsl(230, 50%, 22%);
+  box-shadow: 4px 4px 0 hsl(60 100% 35%);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+html[data-layout="8"] button[class*="bg-primary"]:hover {
+  transform: translate(2px, 2px);
+  box-shadow: 2px 2px 0 hsl(60 100% 35%);
+}
+
+html[data-layout="8"] h1,
+html[data-layout="8"] h2,
+html[data-layout="8"] h3 {
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: hsl(300, 80%, 30%) !important;
+  -webkit-text-fill-color: hsl(300, 80%, 30%) !important;
+  background: none !important;
+  text-shadow: 3px 3px 0 hsl(60 100% 50%);
+}
+
+html[data-layout="8"] body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 3px,
+    hsl(60 35% 70% / 0.18) 3px,
+    hsl(60 35% 70% / 0.18) 4px
+  );
+  pointer-events: none;
+  z-index: 9998;
+}
+
+/* 8Bit Light pill bar override */
+html[data-layout="8"] .layout-switcher {
+  border-radius: 0;
+  background: hsl(60, 35%, 95%);
+  border: 3px solid hsl(230, 50%, 22%);
+  box-shadow: 4px 4px 0 hsl(300 80% 38%);
+  backdrop-filter: none;
+}
+
+html[data-layout="8"] .layout-pill {
+  border-radius: 0;
+  border: 2px solid hsl(230 50% 30%);
+  color: hsl(230, 60%, 20%);
+  font-size: 10px;
+}
+
+html[data-layout="8"] .layout-pill:hover {
+  background: hsl(300 80% 38% / 0.12);
+  color: hsl(300, 80%, 30%);
+  border-color: hsl(300, 80%, 38%);
+}
+
+html[data-layout="8"] .layout-pill--active {
+  background: hsl(300, 80%, 38%);
+  color: white;
+  border-color: hsl(230, 50%, 22%);
+  box-shadow: 2px 2px 0 hsl(60 100% 40%);
+}
+
+/* Championship gold override for pill bar */
+html[data-layout="4"] .layout-switcher {
+  background: hsl(222 47% 10% / 0.9);
+  border-color: hsl(43 96% 56% / 0.3);
+  box-shadow: 0 4px 32px hsl(222 47% 5% / 0.8), 0 0 0 1px hsl(43 96% 56% / 0.1);
+}
+
+html[data-layout="4"] .layout-pill {
+  border-color: hsl(43 96% 56% / 0.25);
+  color: hsl(45 80% 55%);
+}
+
+html[data-layout="4"] .layout-pill:hover {
+  background: hsl(43 96% 56% / 0.15);
+  color: hsl(43, 96%, 70%);
+  border-color: hsl(43 96% 56% / 0.6);
+}
+
+html[data-layout="4"] .layout-pill--active {
+  background: hsl(43, 96%, 56%);
+  color: hsl(222, 47%, 8%);
+  border-color: hsl(43, 96%, 56%);
+  box-shadow: 0 0 12px hsl(43 96% 56% / 0.5);
+}

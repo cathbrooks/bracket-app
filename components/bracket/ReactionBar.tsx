@@ -22,7 +22,7 @@ interface ReactionBarProps {
 
 export function ReactionBar({ counts, currentReaction, onReact, disabled = false }: ReactionBarProps) {
   return (
-    <div className="flex items-center gap-1 pt-2">
+    <div className="flex flex-wrap items-center gap-1 pt-2">
       {EMOJI_TYPES.map((emoji) => {
         const isSelected = currentReaction === emoji;
         const count = counts[emoji] ?? 0;
@@ -34,7 +34,7 @@ export function ReactionBar({ counts, currentReaction, onReact, disabled = false
             onClick={() => onReact(emoji)}
             disabled={disabled}
             className={cn(
-              'flex items-center gap-0.5 rounded-full border px-1.5 py-0.5 text-xs transition-colors',
+              'flex min-h-[32px] items-center gap-1 rounded-full border px-2 py-1 text-sm transition-colors',
               isSelected
                 ? 'border-primary bg-primary/10 text-primary'
                 : 'border-transparent hover:border-border hover:bg-muted',
@@ -43,9 +43,9 @@ export function ReactionBar({ counts, currentReaction, onReact, disabled = false
             aria-label={`React with ${emoji}`}
             aria-pressed={isSelected}
           >
-            <span>{EMOJI_DISPLAY[emoji]}</span>
+            <span className="text-base leading-none">{EMOJI_DISPLAY[emoji]}</span>
             {count > 0 && (
-              <span className="tabular-nums text-[10px] text-muted-foreground">
+              <span className="tabular-nums text-xs text-muted-foreground">
                 {count}
               </span>
             )}
