@@ -5,7 +5,7 @@ import type { Match, Team } from '@/lib/types/tournament.types';
 
 vi.mock('@/hooks/useReactions', () => ({
   useReactions: () => ({
-    counts: { fire: 0, heart: 0, trophy: 0, shocked: 0, sad: 0, clap: 0 },
+    counts: { fire: 0, trophy: 0, shocked: 0, sad: 0, clap: 0 },
     currentReaction: null,
     submitReaction: vi.fn(),
     isLoading: false,

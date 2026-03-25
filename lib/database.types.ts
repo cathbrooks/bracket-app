@@ -212,7 +212,7 @@ export type Database = {
           id: string;
           match_id: string;
           session_id: string;
-          emoji_type: 'fire' | 'heart' | 'trophy' | 'shocked' | 'sad' | 'clap';
+          emoji_type: 'fire' | 'trophy' | 'shocked' | 'sad' | 'clap';
           created_at: string;
           updated_at: string;
         };
@@ -220,7 +220,7 @@ export type Database = {
           id?: string;
           match_id: string;
           session_id: string;
-          emoji_type: 'fire' | 'heart' | 'trophy' | 'shocked' | 'sad' | 'clap';
+          emoji_type: 'fire' | 'trophy' | 'shocked' | 'sad' | 'clap';
           created_at?: string;
           updated_at?: string;
         };
@@ -228,7 +228,7 @@ export type Database = {
           id?: string;
           match_id?: string;
           session_id?: string;
-          emoji_type?: 'fire' | 'heart' | 'trophy' | 'shocked' | 'sad' | 'clap';
+          emoji_type?: 'fire' | 'trophy' | 'shocked' | 'sad' | 'clap';
           created_at?: string;
           updated_at?: string;
         };

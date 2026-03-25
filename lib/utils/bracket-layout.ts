@@ -79,7 +79,8 @@ export interface MatchPosition {
 
 const MATCH_WIDTH = 220;
 const MATCH_HEIGHT = 72;
-const SPECTATOR_MATCH_HEIGHT = 200;
+const PREDICTION_MATCH_HEIGHT = 128;
+const SPECTATOR_MATCH_HEIGHT = 260;
 const ROUND_GAP = 60;
 const MATCH_VERTICAL_GAP = 16;
 
@@ -107,4 +108,4 @@ export function calculateMatchPositions(
   return positions;
 }
 
-export { MATCH_WIDTH, MATCH_HEIGHT, SPECTATOR_MATCH_HEIGHT, ROUND_GAP };
+export { MATCH_WIDTH, MATCH_HEIGHT, PREDICTION_MATCH_HEIGHT, SPECTATOR_MATCH_HEIGHT, ROUND_GAP };

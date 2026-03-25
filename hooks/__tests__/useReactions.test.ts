@@ -4,7 +4,7 @@ import { useReactions } from '../useReactions';
 
 vi.mock('../useRealtimeReactions', () => ({
   useRealtimeReactions: vi.fn(() => ({
-    reactionCounts: { fire: 0, heart: 0, trophy: 0, shocked: 0, sad: 0, clap: 0 },
+    reactionCounts: { fire: 0, trophy: 0, shocked: 0, sad: 0, clap: 0 },
     isConnected: true,
     connectionState: 'connected',
     error: null,
@@ -41,7 +41,7 @@ describe('useReactions', () => {
     const { result } = renderHook(() => useReactions('m1', 't1'));
 
     await act(async () => {
-      await result.current.submitReaction('heart');
+      await result.current.submitReaction('fire');
     });
 
     expect(result.current.currentReaction).toBeNull();

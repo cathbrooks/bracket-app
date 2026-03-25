@@ -12,7 +12,7 @@ import {
   groupByBracketCategory,
   calculateMatchPositions,
   MATCH_WIDTH,
-  MATCH_HEIGHT,
+  PREDICTION_MATCH_HEIGHT,
   ROUND_GAP,
 } from '@/lib/utils/bracket-layout';
 import { BracketConnectors } from '@/components/bracket/BracketConnectors';
@@ -259,7 +259,7 @@ export function BracketPredictionForm({
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          displayName: displayName.trim() || undefined,
+          displayName: displayName.trim(),
           predictions: cleanPicks,
           sessionId: getSessionId(),
         }),
@@ -301,12 +301,13 @@ export function BracketPredictionForm({
       </div>
 
       <FormItem>
-        <FormLabel className="text-xs">Display Name (optional)</FormLabel>
+        <FormLabel className="text-xs">Display Name <span className="text-destructive">*</span></FormLabel>
         <Input
           placeholder="Your name on the leaderboard"
           value={displayName}
           onChange={(e) => setDisplayName(e.target.value)}
           maxLength={30}
+          required
           className="h-8 text-sm"
         />
       </FormItem>
@@ -366,9 +367,12 @@ export function BracketPredictionForm({
         </div>
       )}
 
+      {isComplete && !displayName.trim() && (
+        <p className="text-xs text-destructive">A display name is required to submit.</p>
+      )}
       <Button
         onClick={handleSubmit}
-        disabled={!isComplete}
+        disabled={!isComplete || !displayName.trim()}
         loading={isSubmitting}
         className="w-full"
       >
@@ -403,10 +407,10 @@ export function PredictionBracketSection({
   rounds: ReturnType<typeof groupByRound>;
   allMatchesInSection: Match[];
 }) {
-  const positions = useMemo(() => calculateMatchPositions(rounds), [rounds]);
+  const positions = useMemo(() => calculateMatchPositions(rounds, PREDICTION_MATCH_HEIGHT), [rounds]);
   const totalWidth = rounds.length * (MATCH_WIDTH + ROUND_GAP) - ROUND_GAP;
   const firstRoundCount = rounds[0]?.matches.length ?? 1;
-  const totalHeight = firstRoundCount * (MATCH_HEIGHT + 16) - 16;
+  const totalHeight = firstRoundCount * (PREDICTION_MATCH_HEIGHT + 16) - 16;
 
   return (
     <div className="overflow-x-auto overflow-y-clip pt-7 pb-4">
@@ -545,7 +549,7 @@ function PredictionMatchCard({
             </span>
           )}
           {!isBye && isAuto && hasPick && (
-            <span className="flex items-center gap-0.5 text-[10px] text-primary/60">
+            <span className="flex items-center gap-0.5 text-[10px] text-blue-500/60">
               <Wand2 className="h-2.5 w-2.5" />
               auto
             </span>
@@ -620,8 +624,8 @@ function PredictionTeamRow({
       onClick={onClick}
       className={cn(
         'w-full flex items-center gap-1.5 rounded px-2 py-2 text-left transition-colors min-h-[40px]',
-        isPicked && !isAuto && 'bg-primary/10 text-primary font-semibold',
-        isPicked && isAuto && 'bg-primary/5 text-primary/70 font-medium',
+        isPicked && !isAuto && 'bg-blue-500/15 text-blue-700 dark:text-blue-400 font-semibold',
+        isPicked && isAuto && 'bg-blue-500/8 text-blue-600/70 dark:text-blue-400/70 font-medium',
         isLoser && 'text-muted-foreground/50 line-through',
         isByeWinner && 'text-muted-foreground italic',
         !isPicked && !isLoser && !isByeWinner && !disabled && 'hover:bg-muted/60 text-foreground',
@@ -634,7 +638,7 @@ function PredictionTeamRow({
       )}
       <span className="flex-1 truncate text-sm">{label}</span>
       {isPicked && team && (
-        <span className="shrink-0 text-xs font-bold text-green-600 dark:text-green-400">W</span>
+        <span className="shrink-0 text-xs font-bold text-blue-600 dark:text-blue-400">W</span>
       )}
     </button>
   );

@@ -70,7 +70,7 @@ describe('applyMatchDelete', () => {
 
 describe('applyReactionChange', () => {
   it('increments on INSERT', () => {
-    const counts = { fire: 0, heart: 1 };
+    const counts = { fire: 0, trophy: 1 };
     const reaction = { emoji_type: 'fire' } as ReactionRow;
     const result = applyReactionChange(counts, reaction, 'INSERT');
     expect(result.fire).toBe(1);

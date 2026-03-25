@@ -4,7 +4,7 @@ import { ReactionBar } from '../ReactionBar';
 import type { ReactionCounts } from '@/lib/types/tournament.types';
 
 const zeroCounts: ReactionCounts = {
-  fire: 0, heart: 0, trophy: 0, shocked: 0, sad: 0, clap: 0,
+  fire: 0, trophy: 0, shocked: 0, sad: 0, clap: 0,
 };
 
 describe('ReactionBar', () => {
@@ -13,7 +13,7 @@ describe('ReactionBar', () => {
       <ReactionBar counts={zeroCounts} currentReaction={null} onReact={vi.fn()} />
     );
     const buttons = screen.getAllByRole('button');
-    expect(buttons).toHaveLength(6);
+    expect(buttons).toHaveLength(5);
   });
 
   it('calls onReact when button clicked', () => {
@@ -35,9 +35,9 @@ describe('ReactionBar', () => {
 
   it('marks selected reaction with aria-pressed', () => {
     render(
-      <ReactionBar counts={zeroCounts} currentReaction="heart" onReact={vi.fn()} />
+      <ReactionBar counts={zeroCounts} currentReaction="trophy" onReact={vi.fn()} />
     );
-    expect(screen.getByLabelText('React with heart')).toHaveAttribute('aria-pressed', 'true');
+    expect(screen.getByLabelText('React with trophy')).toHaveAttribute('aria-pressed', 'true');
     expect(screen.getByLabelText('React with fire')).toHaveAttribute('aria-pressed', 'false');
   });
 

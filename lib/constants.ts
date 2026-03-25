@@ -31,7 +31,6 @@ export const BRACKET_CATEGORIES = [
 
 export const EMOJI_TYPES = [
   "fire",
-  "heart",
   "trophy",
   "shocked",
   "sad",

@@ -58,33 +58,11 @@ function SpectatorContent({ tournament, matches, teams, connectionState }: Spect
   const isCompleted = tournament.state === 'completed';
   const hasPredictTab = showPredictionForm && playableMatches.length > 0;
 
-  const mobileTabs: { id: MobileTab; label: string }[] = [
+  const tabs: { id: MobileTab; label: string }[] = [
     { id: 'bracket', label: 'Bracket' },
-    ...(hasPredictTab ? [{ id: 'predict' as MobileTab, label: 'Predict' }] : []),
+    ...(hasPredictTab ? [{ id: 'predict' as MobileTab, label: 'Make Predictions' }] : []),
     { id: 'leaderboard', label: 'Scores' },
   ];
-
-  const sidebarContent = (
-    <div className="space-y-6">
-      {showPredictionForm && playableMatches.length > 0 && (
-        <BracketPredictionForm
-          tournament={tournament}
-          matches={matches}
-          teams={teams}
-          onSubmitted={refetch}
-        />
-      )}
-      {hasSubmittedPredictions && (
-        <SubmittedPredictions
-          tournament={tournament}
-          matches={matches}
-          teams={teams}
-          sessionId={sessionId}
-        />
-      )}
-      <PredictionLeaderboard currentSessionId={sessionId} />
-    </div>
-  );
 
   return (
     <div className="flex min-h-screen flex-col">
@@ -100,16 +78,16 @@ function SpectatorContent({ tournament, matches, teams, connectionState }: Spect
           </div>
         </div>
 
-        {/* Mobile tab bar */}
-        <div className="container pb-0 lg:hidden">
+        {/* Tab bar */}
+        <div className="container pb-0">
           <div className="flex border-b">
-            {mobileTabs.map((tab) => (
+            {tabs.map((tab) => (
               <button
                 key={tab.id}
                 type="button"
                 onClick={() => setActiveTab(tab.id)}
                 className={cn(
-                  'flex-1 py-2.5 text-sm font-medium transition-colors',
+                  'px-4 py-2.5 text-sm font-medium transition-colors',
                   activeTab === tab.id
                     ? 'border-b-2 border-primary text-primary'
                     : 'text-muted-foreground hover:text-foreground'
@@ -138,21 +116,23 @@ function SpectatorContent({ tournament, matches, teams, connectionState }: Spect
         </div>
       )}
 
-      {/* Mobile content — tab-driven */}
-      <div className="container flex-1 pb-28 pt-4 lg:hidden">
+      {/* Content — tab-driven on all screen sizes */}
+      <div className="container flex-1 pb-28 pt-4">
         {activeTab === 'bracket' && (
           <BracketView tournament={tournament} matches={matches} teams={teams} />
         )}
         {activeTab === 'predict' && hasPredictTab && (
-          <BracketPredictionForm
-            tournament={tournament}
-            matches={matches}
-            teams={teams}
-            onSubmitted={() => { refetch(); setActiveTab('leaderboard'); }}
-          />
+          <div className="mx-auto max-w-2xl">
+            <BracketPredictionForm
+              tournament={tournament}
+              matches={matches}
+              teams={teams}
+              onSubmitted={() => { refetch(); setActiveTab('leaderboard'); }}
+            />
+          </div>
         )}
         {activeTab === 'leaderboard' && (
-          <div className="space-y-6">
+          <div className="mx-auto max-w-2xl space-y-6">
             {hasSubmittedPredictions && (
               <SubmittedPredictions
                 tournament={tournament}
@@ -164,14 +144,6 @@ function SpectatorContent({ tournament, matches, teams, connectionState }: Spect
             <PredictionLeaderboard currentSessionId={sessionId} />
           </div>
         )}
-      </div>
-
-      {/* Desktop content — side-by-side */}
-      <div className="container hidden pb-28 pt-4 lg:block">
-        <div className="grid gap-6 lg:grid-cols-[1fr_320px] lg:items-start">
-          <BracketView tournament={tournament} matches={matches} teams={teams} />
-          {sidebarContent}
-        </div>
       </div>
     </div>
   );
