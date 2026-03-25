@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { getMatchTimingDetails } from '@/lib/utils/match-timing';
 import { getMatchDisplayState, getMatchStateLabel } from '@/lib/utils/match-state';
 import { Badge } from '@/components/ui/badge';
@@ -13,25 +13,49 @@ interface MatchTooltipProps {
 }
 
 export function MatchTooltip({ match, children }: MatchTooltipProps) {
-  const [isVisible, setIsVisible] = useState(false);
+  const [tooltipPos, setTooltipPos] = useState<{
+    top: number;
+    left: number;
+    placement: 'above' | 'below';
+  } | null>(null);
+  const wrapperRef = useRef<HTMLDivElement>(null);
   const timing = getMatchTimingDetails(match);
   const state = getMatchDisplayState(match);
 
+  function showTooltip() {
+    if (!wrapperRef.current) return;
+    const rect = wrapperRef.current.getBoundingClientRect();
+    const estimatedTooltipHeight = 80;
+    const placement: 'above' | 'below' =
+      rect.top - estimatedTooltipHeight < 8 ? 'below' : 'above';
+    setTooltipPos({
+      top: placement === 'above' ? rect.top - 8 : rect.bottom + 8,
+      left: rect.left + rect.width / 2,
+      placement,
+    });
+  }
+
+  function hideTooltip() {
+    setTooltipPos(null);
+  }
+
   return (
     <div
-      className="relative inline-block"
-      onMouseEnter={() => setIsVisible(true)}
-      onMouseLeave={() => setIsVisible(false)}
-      onTouchStart={() => setIsVisible((v) => !v)}
+      ref={wrapperRef}
+      onMouseEnter={showTooltip}
+      onMouseLeave={hideTooltip}
+      onTouchStart={() => (tooltipPos ? hideTooltip() : showTooltip())}
     >
       {children}
-      {isVisible && (
+      {tooltipPos && (
         <div
           className={cn(
-            'absolute bottom-full left-1/2 z-50 mb-2 -translate-x-1/2',
+            'fixed z-50 -translate-x-1/2',
+            tooltipPos.placement === 'above' ? '-translate-y-full' : 'translate-y-0',
             'rounded-lg border bg-popover px-3 py-2 text-xs text-popover-foreground shadow-md',
             'animate-in fade-in-0 zoom-in-95'
           )}
+          style={{ top: tooltipPos.top, left: tooltipPos.left }}
           role="tooltip"
         >
           <div className="flex items-center gap-2">
@@ -46,7 +70,11 @@ export function MatchTooltip({ match, children }: MatchTooltipProps) {
           {timing.secondary && (
             <p className="text-muted-foreground">{timing.secondary}</p>
           )}
-          <div className="absolute left-1/2 top-full -translate-x-1/2 border-4 border-transparent border-t-popover" />
+          {tooltipPos.placement === 'above' ? (
+            <div className="absolute left-1/2 top-full -translate-x-1/2 border-4 border-transparent border-t-popover" />
+          ) : (
+            <div className="absolute bottom-full left-1/2 -translate-x-1/2 border-4 border-transparent border-b-popover" />
+          )}
         </div>
       )}
     </div>

@@ -6,7 +6,6 @@ import type { ReactionCounts } from '@/lib/types/tournament.types';
 
 const EMOJI_DISPLAY: Record<EmojiType, string> = {
   fire: '🔥',
-  trophy: '🏆',
   shocked: '😱',
   sad: '😢',
   clap: '👏',
